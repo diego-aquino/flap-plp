@@ -1,6 +1,7 @@
 module Models.Area where
 
 import Models.Line (Line (Line))
+import qualified Models.Line as Line
 import Utils.Lists (mapWithIndex)
 import Utils.Strings (removeLeadingSpaces)
 
@@ -29,3 +30,11 @@ parseLine baseX baseY stringLine = Line originX originY endX
     numberOfLeadingSpaces = length stringLine - numberOfValidCharacters
     numberOfValidCharacters = length stringLineWithoutLeadingSpaces
     stringLineWithoutLeadingSpaces = removeLeadingSpaces stringLine
+
+overlapsWith :: Area -> Area -> Bool
+overlapsWith area anotherArea =
+  anyLinesOverlap (occupiedLines area) (occupiedLines anotherArea)
+
+anyLinesOverlap :: [Line] -> [Line] -> Bool
+anyLinesOverlap lines otherLines =
+  any (\line -> any (Line.overlapsWith line) otherLines) lines
