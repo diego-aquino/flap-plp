@@ -24,6 +24,13 @@ create originX originY width height holeOriginY holeHeight =
     bottomPipeOriginY = originY + topPipeHeight + holeHeight
     bottomPipeHeight = height - topPipeHeight - holeHeight
 
+tick :: PipeGroup -> PipeGroup
+tick pipeGroup =
+  PipeGroup newTopPipe newBottomPipe (width pipeGroup) (holeHeight pipeGroup)
+  where
+    newTopPipe = Pipe.tick (topPipe pipeGroup)
+    newBottomPipe = Pipe.tick (bottomPipe pipeGroup)
+
 getArea :: PipeGroup -> Area
 getArea pipeGroup = Area.merge topPipeArea bottomPipeArea
   where

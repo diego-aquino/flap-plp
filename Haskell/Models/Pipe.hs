@@ -23,6 +23,13 @@ data Pipe = Pipe
   }
   deriving (Show)
 
+tick :: Pipe -> Pipe
+tick pipe = setOriginX pipe (originX pipe - 1)
+
+setOriginX :: Pipe -> Int -> Pipe
+setOriginX pipe newOriginX =
+  Pipe newOriginX (originY pipe) (width pipe) (height pipe) (direction pipe)
+
 getArea :: Pipe -> Area
 getArea pipe =
   Area.createFromString (originX pipe) (originY pipe) (toString pipe)
