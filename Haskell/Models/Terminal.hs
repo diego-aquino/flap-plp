@@ -1,8 +1,8 @@
 module Models.Terminal where
 --import System.Console.Terminal.Size Import para package que adiciona leitura das dimensões do terminal
-import Control.Concurrent (forkIO, newEmptyMVar, putMVar, MVar, ThreadId)
+import Control.Concurrent (forkIO, newEmptyMVar, putMVar, MVar, ThreadId, tryTakeMVar)
 import System.IO (stdin, hSetBuffering, hSetEcho, BufferMode(NoBuffering))
-
+import Data.Maybe (isJust,fromJust)
 data Terminal = Terminal {
     inputChar:: MVar Char
 }
@@ -23,6 +23,10 @@ getPLayerInput input = do
     
     getPLayerInput input
 
+receivedEnter:: MVar Char -> IO(Bool)
+receivedEnter input = do
+    char <-  tryTakeMVar input
+    return $ (isJust char) && (fromJust char == '\n')
 
 createTerminal:: IO(Terminal)
 createTerminal = do
