@@ -2,6 +2,7 @@ module Models.Terminal where
 
 import Control.Concurrent (MVar, ThreadId, forkIO, newEmptyMVar, putMVar, tryTakeMVar)
 import Data.Maybe (fromJust)
+import qualified System.Console.ANSI as ANSI
 import qualified System.Console.Terminal.Size as Size
 import System.IO (BufferMode (NoBuffering), hSetBuffering, hSetEcho, stdin)
 
@@ -50,3 +51,9 @@ getTerminalHeight :: IO Int
 getTerminalHeight = do
   terminalDimensions <- Size.size
   return (Size.height (fromJust terminalDimensions))
+
+clearScreen :: IO ()
+clearScreen = do
+  ANSI.setSGR [ANSI.Reset]
+  ANSI.clearScreen
+  ANSI.setCursorPosition 0 0
