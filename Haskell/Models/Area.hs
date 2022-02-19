@@ -9,9 +9,16 @@ newtype Area = Area
   {occupiedLines :: [Line]}
   deriving (Show)
 
+createFromLines :: [Line] -> Area
+createFromLines = Area
+
 createFromString :: Int -> Int -> String -> Area
 createFromString originX originY string =
-  Area (parseLines originX originY string)
+  createFromLines (parseLines originX originY string)
+
+merge :: Area -> Area -> Area
+merge area anotherArea =
+  createFromLines (occupiedLines area ++ occupiedLines anotherArea)
 
 parseLines :: Int -> Int -> String -> [Line]
 parseLines originX originY string =
