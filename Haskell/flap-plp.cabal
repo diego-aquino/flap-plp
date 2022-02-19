@@ -67,7 +67,7 @@ executable flap-plp
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.14.3.0, containers, process
+    build-depends:    base ^>=4.14.3.0, containers, process, terminal-size
 
     -- Directories containing source files.
     hs-source-dirs:   app

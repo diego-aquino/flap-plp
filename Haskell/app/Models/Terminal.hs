@@ -1,8 +1,8 @@
 module Models.Terminal where
 
---import System.Console.Terminal.Size Import para package que adiciona leitura das dimensões do terminal
 import Control.Concurrent (MVar, ThreadId, forkIO, newEmptyMVar, putMVar, tryTakeMVar)
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (fromJust)
+import qualified System.Console.Terminal.Size as Size
 import System.IO (BufferMode (NoBuffering), hSetBuffering, hSetEcho, stdin)
 
 newtype Terminal = Terminal
@@ -41,19 +41,12 @@ createTerminal = do
 
   return terminal
 
-getTerminalWidth :: Int
-getTerminalWidth = 10
+getTerminalWidth :: IO Int
+getTerminalWidth = do
+  terminalDimensions <- Size.size
+  return (Size.width (fromJust terminalDimensions))
 
---getTerminalWidth = do -- Future change to getTerminalWidthFunction
---    terminalDimensions <- size
---    width $ fromJust terminalDimensions
-
-getTerminalHeight :: Int
-getTerminalHeight = 10
-
---getTerminalWidth = do -- Future change to getTerminalHeightFunction
---    terminalDimensions <- size
---    height $ fromJust terminalDimensions
-
-getTerminalDimensions :: (Int, Int)
-getTerminalDimensions = (getTerminalWidth, getTerminalHeight)
+getTerminalHeight :: IO Int
+getTerminalHeight = do
+  terminalDimensions <- Size.size
+  return (Size.height (fromJust terminalDimensions))
