@@ -73,9 +73,9 @@ executable flap-plp
       base ^>=4.14.3.0,
       containers,
       process,
-      unix,
       terminal-size,
-      ansi-terminal
+      ansi-terminal,
+      signal
 
     -- Directories containing source files.
     hs-source-dirs:   app

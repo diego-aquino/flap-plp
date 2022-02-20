@@ -6,7 +6,7 @@ import qualified System.Console.ANSI as ANSI
 import qualified System.Console.Terminal.Size as Size
 import System.Exit (exitSuccess)
 import System.IO (BufferMode (NoBuffering), hSetBuffering, hSetEcho, stdin)
-import System.Posix.Signals (Handler (Catch), installHandler, sigINT, sigTERM)
+import System.Signal (installHandler, sigINT, sigTERM)
 
 interruptSignal :: Char
 interruptSignal = '*'
@@ -20,8 +20,8 @@ createTerminal = do
 
   inputChar <- newEmptyMVar
 
-  installHandler sigINT (Catch $ onInterrupt inputChar) Nothing
-  installHandler sigTERM (Catch $ onInterrupt inputChar) Nothing
+  installHandler sigINT (\signal -> onInterrupt inputChar)
+  installHandler sigTERM (\signal -> onInterrupt inputChar)
 
   startPlayerInputThread inputChar
 
