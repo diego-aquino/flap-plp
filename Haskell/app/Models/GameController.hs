@@ -16,7 +16,7 @@ createGameController :: IO GameController
 createGameController = do
   -- gameState = createGameState
   terminal <- Terminal.createTerminal
-  return $ GameController terminal 5
+  return $ GameController terminal 30
 
 -- return $ GameController gameState terminal 30
 
@@ -40,7 +40,7 @@ run controller time = do
       -- let newStateWithInput = if (receivedEnter) then 1 else 0
       -- print newStateWithInput
 
-      Terminal.clearScreen
+      Terminal.resetStylesAndCursor
       -- GameScreen.render gameState
       GameScreen.render (Bird 4 5 0) -- static position for now
       threadDelay delay

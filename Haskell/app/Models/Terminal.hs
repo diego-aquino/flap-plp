@@ -74,8 +74,7 @@ getTerminalHeight = do
   terminalDimensions <- Size.size
   return (Size.height (fromJust terminalDimensions))
 
-clearScreen :: IO ()
-clearScreen = do
+resetStylesAndCursor :: IO ()
+resetStylesAndCursor = do
   ANSI.setSGR [ANSI.Reset]
-  ANSI.clearScreen
   ANSI.setCursorPosition 0 0
