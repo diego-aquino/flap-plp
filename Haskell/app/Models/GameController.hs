@@ -3,20 +3,22 @@ module Models.GameController where
 import Control.Concurrent (threadDelay)
 import Models.Bird (Bird (Bird))
 import qualified Models.GameScreen as GameScreen
+import Models.Terminal (receivedInterruptSignal)
 import qualified Models.Terminal as Terminal
 
-data GameController = GameController {
-  -- gameState:: GameState.GameState,
-  terminal :: Terminal.Terminal,
-  fps :: Int
-}
+data GameController = GameController
+  { -- gameState:: GameState.GameState,
+    terminal :: Terminal.Terminal,
+    fps :: Int
+  }
 
 createGameController :: IO GameController
 createGameController = do
   -- gameState = createGameState
   terminal <- Terminal.createTerminal
   return $ GameController terminal 5
-  -- return $ GameController gameState terminal 30
+
+-- return $ GameController gameState terminal 30
 
 initGameLoop :: IO ()
 initGameLoop = do
@@ -29,18 +31,21 @@ run controller time = do
   -- let newState = tick $ gameState controller
 
   --Processar input do jogador
-  -- receivedEnter <- Terminal.receivedEnter $ Terminal.inputChar $ terminal controller
-  -- let newStateWithInput = if (receivedEnter) then 1 else 0
-  -- print newStateWithInput
+  shouldStop <- receivedInterruptSignal (Terminal.inputChar (terminal controller))
 
-  -- GameScreen.render gameState
-  Terminal.clearScreen
-  GameScreen.render (Bird 4 5 0) -- static position for now
+  if shouldStop
+    then return ()
+    else do
+      -- receivedEnter <- Terminal.receivedEnter $ Terminal.inputChar $ terminal controller
+      -- let newStateWithInput = if (receivedEnter) then 1 else 0
+      -- print newStateWithInput
 
-  threadDelay delay
-  run controller (time + delay)
-  --run (setControllerGameState controller newStateWithInput) (time+delay)
-
+      Terminal.clearScreen
+      -- GameScreen.render gameState
+      GameScreen.render (Bird 4 5 0) -- static position for now
+      threadDelay delay
+      --run (setControllerGameState controller newStateWithInput) (time+delay)
+      run controller (time + delay)
   where
     delay = 1000000 `div` fps controller
 
