@@ -1,9 +1,12 @@
 module Models.GameScreen where
 
+import Data.Foldable (fold)
 import Data.List (intercalate)
 import Data.Maybe (isJust, isNothing)
 import Models.Bird (Bird (Bird))
 import qualified Models.Bird as Bird
+import Models.PipeGroup (PipeGroup (PipeGroup))
+import qualified Models.PipeGroup as PipeGroup
 import qualified Models.Terminal as Terminal
 import Utils.Lists (createMatrix, mapWithIndex)
 import Utils.Maybe (justOrDefault)
@@ -12,21 +15,24 @@ type ScreenMatrixLine = [String]
 
 type ScreenMatrix = [ScreenMatrixLine]
 
--- Right now, the render methods depend directly on Bird. In the future, they
--- will receive a GameState object as parameter.
+-- Right now, the render methods depend directly on Bird and PipeGroup. In the
+-- future, they will receive a GameState object as parameter.
 
-render :: Bird -> IO ()
+render :: Bird -> [PipeGroup] -> IO ()
 render = renderPlayingScreen
 
-renderPlayingScreen :: Bird -> IO ()
-renderPlayingScreen bird = do
+renderPlayingScreen :: Bird -> [PipeGroup] -> IO ()
+renderPlayingScreen bird pipeGroups = do
   terminalWidth <- Terminal.getTerminalWidth
   terminalHeight <- Terminal.getTerminalHeight
 
-  let screenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
-  let screenMatrixWithBird = renderBirdToScreenMatrix bird screenMatrix
+  let emptyScreenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
+  let populatedScreenMatrix =
+        renderPipeGroupsToScreenMatrix
+          pipeGroups
+          (renderBirdToScreenMatrix bird emptyScreenMatrix)
 
-  printScreenMatrix screenMatrixWithBird
+  printScreenMatrix populatedScreenMatrix
 
 createEmptyScreenMatrix :: Int -> Int -> ScreenMatrix
 createEmptyScreenMatrix width height =
@@ -38,6 +44,21 @@ renderBirdToScreenMatrix bird =
     (Bird.originX bird)
     (Bird.originY bird)
     (Bird.getStringRepresentation bird)
+
+renderPipeGroupsToScreenMatrix :: [PipeGroup] -> ScreenMatrix -> ScreenMatrix
+renderPipeGroupsToScreenMatrix pipeGroups screenMatrix
+  | null pipeGroups = screenMatrix
+  | otherwise =
+    renderPipeGroupsToScreenMatrix
+      (tail pipeGroups)
+      (renderPipeGroupToScreenMatrix (head pipeGroups) screenMatrix)
+
+renderPipeGroupToScreenMatrix :: PipeGroup -> ScreenMatrix -> ScreenMatrix
+renderPipeGroupToScreenMatrix pipeGroup =
+  renderObjectToScreenMatrix
+    (PipeGroup.originX pipeGroup)
+    (PipeGroup.originY pipeGroup)
+    (PipeGroup.toString pipeGroup)
 
 renderObjectToScreenMatrix :: Int -> Int -> String -> ScreenMatrix -> ScreenMatrix
 renderObjectToScreenMatrix originX originY stringRepresentation =

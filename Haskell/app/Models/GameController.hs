@@ -3,7 +3,15 @@ module Models.GameController where
 import Control.Concurrent (threadDelay)
 import Models.Bird (Bird (Bird))
 import qualified Models.GameScreen as GameScreen
+import qualified Models.PipeGroup as PipeGroup
 import qualified Models.Terminal as Terminal
+
+defaultFPS = 20
+
+pipeWidth = 5
+pipeGroupOriginY = 0
+pipeGroupHoleHeight = 5
+pipeGroupSpaceX = 30
 
 data GameController = GameController
   { -- gameState:: GameState.GameState,
@@ -15,7 +23,7 @@ createGameController :: IO GameController
 createGameController = do
   -- gameState = createGameState
   terminal <- Terminal.createTerminal
-  return $ GameController terminal 30
+  return $ GameController terminal defaultFPS
 
 -- return $ GameController gameState terminal 30
 
@@ -29,7 +37,6 @@ run controller time = do
   -- Atualizar jogo
   -- let newState = tick $ gameState controller
 
-  --Processar input do jogador
   let inputChar = Terminal.inputChar (terminal controller)
   lastCharacter <- Terminal.takeLastReceivedCharacter inputChar
   let shouldStop = lastCharacter == Just Terminal.interruptSignal
@@ -39,9 +46,18 @@ run controller time = do
     else do
       -- if lastCharacter == '\n' then ... else ...
 
+      terminalHeight <- Terminal.getTerminalHeight
+      let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 1
+
       Terminal.resetStylesAndCursor
+
       -- GameScreen.render gameState
-      GameScreen.render (Bird 4 5 0) -- static position for now
+      GameScreen.render
+        (Bird 4 5 0)
+        [ PipeGroup.create 25 pipeGroupOriginY pipeWidth pipeGroupHeight 4 pipeGroupHoleHeight,
+          PipeGroup.create (25 + pipeGroupSpaceX) pipeGroupOriginY pipeWidth pipeGroupHeight 6 pipeGroupHoleHeight
+        ] -- static positions for now
+
       threadDelay delay
       --run (setControllerGameState controller newStateWithInput) (time+delay)
       run controller (time + delay)
