@@ -7,9 +7,10 @@ import qualified System.Console.Terminal.Size as Size
 import System.Exit (exitSuccess)
 import System.IO (BufferMode (NoBuffering), hSetBuffering, hSetEcho, stdin)
 import System.Signal (installHandler, sigINT, sigTERM)
+import Data.Char (chr)
 
 interruptSignal :: Char
-interruptSignal = '*'
+interruptSignal = chr 0 -- NULL character in the ASCII table
 
 newtype Terminal = Terminal
   {inputChar :: MVar Char}
@@ -48,21 +49,14 @@ getPlayerInput inputChar = do
   newChar <- getChar
   putMVar inputChar newChar
 
-  shouldStop <- receivedInterruptSignal inputChar
+  let shouldStop = newChar == interruptSignal
   if shouldStop
     then return ()
     else do
       getPlayerInput inputChar
 
-receivedEnter :: MVar Char -> IO Bool
-receivedEnter inputChar = do
-  char <- tryTakeMVar inputChar
-  return $ char == Just '\n'
-
-receivedInterruptSignal :: MVar Char -> IO Bool
-receivedInterruptSignal inputChar = do
-  char <- tryTakeMVar inputChar
-  return $ char == Just interruptSignal
+takeLastReceivedCharacter :: MVar Char -> IO (Maybe Char)
+takeLastReceivedCharacter inputChar = do tryTakeMVar inputChar
 
 getTerminalWidth :: IO Int
 getTerminalWidth = do

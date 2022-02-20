@@ -3,7 +3,6 @@ module Models.GameController where
 import Control.Concurrent (threadDelay)
 import Models.Bird (Bird (Bird))
 import qualified Models.GameScreen as GameScreen
-import Models.Terminal (receivedInterruptSignal)
 import qualified Models.Terminal as Terminal
 
 data GameController = GameController
@@ -31,14 +30,14 @@ run controller time = do
   -- let newState = tick $ gameState controller
 
   --Processar input do jogador
-  shouldStop <- receivedInterruptSignal (Terminal.inputChar (terminal controller))
+  let inputChar = Terminal.inputChar (terminal controller)
+  lastCharacter <- Terminal.takeLastReceivedCharacter inputChar
+  let shouldStop = lastCharacter == Just Terminal.interruptSignal
 
   if shouldStop
     then return ()
     else do
-      -- receivedEnter <- Terminal.receivedEnter $ Terminal.inputChar $ terminal controller
-      -- let newStateWithInput = if (receivedEnter) then 1 else 0
-      -- print newStateWithInput
+      -- if lastCharacter == '\n' then ... else ...
 
       Terminal.resetStylesAndCursor
       -- GameScreen.render gameState
