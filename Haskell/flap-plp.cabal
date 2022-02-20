@@ -62,7 +62,8 @@ executable flap-plp
       Models.Area,
       Models.Line,
       Utils.Lists,
-      Utils.Strings
+      Utils.Strings,
+      Utils.Maybe
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

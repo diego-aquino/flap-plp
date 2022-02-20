@@ -15,7 +15,7 @@ createGameController :: IO GameController
 createGameController = do
   -- gameState = createGameState
   terminal <- Terminal.createTerminal
-  return $ GameController terminal 10
+  return $ GameController terminal 5
   -- return $ GameController gameState terminal 30
 
 initGameLoop :: IO ()
@@ -35,7 +35,7 @@ run controller time = do
 
   -- GameScreen.render gameState
   Terminal.clearScreen
-  GameScreen.render
+  GameScreen.render (Bird 4 5 0) -- static position for now
 
   threadDelay delay
   run controller (time + delay)
