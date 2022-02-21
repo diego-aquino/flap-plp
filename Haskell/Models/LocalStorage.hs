@@ -10,9 +10,12 @@ saveHighScore num = do
 	writeFile file stringNum
 
 readHighScore:: IO Int
-readHighScore = do 
-	content <- openFile "Score.txt" ReadMode
-	score <- hGetContents content
-	let highScore = read score
-	return highScore
+readHighScore = do
+	fileExists <- doesFileExist "Score.txt" 
+	if fileExists then do
+		content <- openFile "Score.txt" ReadMode
+		score <- hGetContents content
+		let highScore = read score
+		return highScore
+	else return 0
 	
