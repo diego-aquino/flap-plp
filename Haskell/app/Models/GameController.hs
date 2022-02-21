@@ -1,45 +1,68 @@
 module Models.GameController where
-import qualified Models.Terminal as Terminal
-import Control.Concurrent (threadDelay)
 
-data GameController = GameController {
-    -- gameState:: GameState.GameState,
-    -- gameScreen:: GameScreen.GameScreen,
+import Control.Concurrent (threadDelay)
+import Models.Bird (Bird (Bird))
+import qualified Models.GameScreen as GameScreen
+import qualified Models.PipeGroup as PipeGroup
+import qualified Models.Terminal as Terminal
+
+defaultFPS = 20
+
+pipeWidth = 5
+pipeGroupOriginY = 0
+pipeGroupHoleHeight = 5
+pipeGroupSpaceX = 30
+
+data GameController = GameController
+  { -- gameState:: GameState.GameState,
     terminal :: Terminal.Terminal,
     fps :: Int
-}
+  }
 
-createGameController :: IO(GameController)
+createGameController :: IO GameController
 createGameController = do
-    --gameState = createGameState
-    --gameScreen = createGameScreen
-    terminal <- Terminal.createTerminal
-    return $ GameController terminal 30
-    -- return $ GameController gameState gameScreen terminal 30
+  -- gameState = createGameState
+  terminal <- Terminal.createTerminal
+  return $ GameController terminal defaultFPS
 
-initGameLoop :: IO()
+-- return $ GameController gameState terminal 30
+
+initGameLoop :: IO ()
 initGameLoop = do
-    gameController <- createGameController
-    run gameController 0
+  gameController <- createGameController
+  run gameController 0
 
-run :: GameController -> Int -> IO()
+run :: GameController -> Int -> IO ()
 run controller time = do
-    
-    -- Atualizar jogo
-    -- let newState = tick $ gameState controller
+  -- Atualizar jogo
+  -- let newState = tick $ gameState controller
 
-    --Processar input do jogador
-    receivedEnter <- Terminal.receivedEnter $ Terminal.inputChar $ terminal controller
-    let newStateWithInput = if (receivedEnter) then 1 else 0
-    print newStateWithInput
-    
-    --showGame newStateWithInput
+  let inputChar = Terminal.inputChar (terminal controller)
+  lastCharacter <- Terminal.takeLastReceivedCharacter inputChar
+  let shouldStop = lastCharacter == Just Terminal.interruptSignal
 
-    threadDelay delay
-    run controller (time+delay)
-    --run (setControllerGameState controller newStateWithInput) (time+delay)
-    where
-        delay = 1000000 `div` (fps controller)
+  if shouldStop
+    then return ()
+    else do
+      -- if lastCharacter == '\n' then ... else ...
+
+      terminalHeight <- Terminal.getTerminalHeight
+      let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 1
+
+      Terminal.resetStylesAndCursor
+
+      -- GameScreen.render gameState
+      GameScreen.render
+        (Bird 4 5 0)
+        [ PipeGroup.create 25 pipeGroupOriginY pipeWidth pipeGroupHeight 4 pipeGroupHoleHeight,
+          PipeGroup.create (25 + pipeGroupSpaceX) pipeGroupOriginY pipeWidth pipeGroupHeight 6 pipeGroupHoleHeight
+        ] -- static positions for now
+
+      threadDelay delay
+      --run (setControllerGameState controller newStateWithInput) (time+delay)
+      run controller (time + delay)
+  where
+    delay = 1000000 `div` fps controller
 
 {-Futuros métodos para quando implementar gameState
 
@@ -50,17 +73,11 @@ handlePlayerInput controller state = do
     if (receivedEnter) then return (jumpBird newState) else return newState
 -}
 
-{- Printar coisas na tela
-showGame:: IO()
-showGame = do
-    printGameScreen newState-}
-
-
 setControllerGameState:: GameController -> GameState -> GameController
 setControllerGameState controller newState = GameController newState (gameScreen controller) (terminal controller) (fps controller)
 
 tick:: GameState -> GameState
-tick state = 
+tick state =
 
 jumpBird:: gameState -> gameState
 jumpBird state = -}

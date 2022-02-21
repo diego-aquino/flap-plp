@@ -55,6 +55,7 @@ executable flap-plp
     other-modules:
       Models.GameState,
       Models.GameController,
+      Models.GameScreen,
       Models.Terminal,
       Models.Bird,
       Models.PipeGroup,
@@ -62,7 +63,8 @@ executable flap-plp
       Models.Area,
       Models.Line,
       Utils.Lists,
-      Utils.Strings
+      Utils.Strings,
+      Utils.Maybe
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -73,7 +75,8 @@ executable flap-plp
       containers,
       process,
       terminal-size,
-      ansi-terminal
+      ansi-terminal,
+      signal
 
     -- Directories containing source files.
     hs-source-dirs:   app
