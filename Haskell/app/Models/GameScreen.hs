@@ -5,6 +5,8 @@ import Data.List (intercalate)
 import Data.Maybe (isJust, isNothing)
 import Models.Bird (Bird (Bird))
 import qualified Models.Bird as Bird
+import Models.GameState (GameState (GameState))
+import qualified Models.GameState as GameState
 import Models.PipeGroup (PipeGroup (PipeGroup))
 import qualified Models.PipeGroup as PipeGroup
 import qualified Models.Terminal as Terminal
@@ -18,19 +20,22 @@ type ScreenMatrix = [ScreenMatrixLine]
 -- Right now, the render methods depend directly on Bird and PipeGroup. In the
 -- future, they will receive a GameState object as parameter.
 
-render :: Bird -> [PipeGroup] -> IO ()
+render :: GameState -> IO ()
 render = renderPlayingScreen
 
-renderPlayingScreen :: Bird -> [PipeGroup] -> IO ()
-renderPlayingScreen bird pipeGroups = do
+renderPlayingScreen :: GameState -> IO ()
+renderPlayingScreen gameState = do
   terminalWidth <- Terminal.getTerminalWidth
   terminalHeight <- Terminal.getTerminalHeight
 
   let emptyScreenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
+
+  let bird = GameState.bird gameState
+  let pipeGroups = GameState.pipeGroups gameState
+
   let populatedScreenMatrix =
-        renderPipeGroupsToScreenMatrix
-          pipeGroups
-          (renderBirdToScreenMatrix bird emptyScreenMatrix)
+        renderPipeGroupsToScreenMatrix pipeGroups $
+          renderBirdToScreenMatrix bird emptyScreenMatrix
 
   printScreenMatrix populatedScreenMatrix
 
