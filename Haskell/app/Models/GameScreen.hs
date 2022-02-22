@@ -21,7 +21,30 @@ type ScreenMatrix = [ScreenMatrixLine]
 -- future, they will receive a GameState object as parameter.
 
 render :: GameState -> IO ()
-render = renderPlayingScreen
+render state
+  | (GameState.screenType state) == GameState.PLAYING = renderPlayingScreen state
+  | (GameState.screenType state) == GameState.PAUSED = renderPausedScreen state
+  | (GameState.screenType state) == GameState.GAMEOVER = renderGameoverScreen state
+
+renderGameoverScreen :: GameState -> IO ()
+renderGameoverScreen gameState = do
+  terminalWidth <- Terminal.getTerminalWidth
+  terminalHeight <- Terminal.getTerminalHeight
+
+  let emptyScreenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
+  let populatedScreenMatrix = renderTextToScreenMatrix ["Game Over","Press <Enter> to play again","High Score: "++ (show $ GameState.highestScore gameState)] emptyScreenMatrix
+
+  printScreenMatrix populatedScreenMatrix
+
+renderPausedScreen :: GameState -> IO ()
+renderPausedScreen gameState = do
+  terminalWidth <- Terminal.getTerminalWidth
+  terminalHeight <- Terminal.getTerminalHeight
+
+  let emptyScreenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
+  let populatedScreenMatrix = renderTextToScreenMatrix ["Welcome to Flap-PLP","Press <Enter> to flap your wings","High Score: "++ (show $ GameState.highestScore gameState)] emptyScreenMatrix
+
+  printScreenMatrix populatedScreenMatrix
 
 renderPlayingScreen :: GameState -> IO ()
 renderPlayingScreen gameState = do
@@ -32,10 +55,12 @@ renderPlayingScreen gameState = do
 
   let bird = GameState.bird gameState
   let pipeGroups = GameState.pipeGroups gameState
+  let score = GameState.score gameState
 
   let populatedScreenMatrix =
-        renderPipeGroupsToScreenMatrix pipeGroups $
-          renderBirdToScreenMatrix bird emptyScreenMatrix
+        renderScoreToScreenMatrix score $
+          renderPipeGroupsToScreenMatrix pipeGroups $
+            renderBirdToScreenMatrix bird emptyScreenMatrix
 
   printScreenMatrix populatedScreenMatrix
 
@@ -64,6 +89,12 @@ renderPipeGroupToScreenMatrix pipeGroup =
     (PipeGroup.originX pipeGroup)
     (PipeGroup.originY pipeGroup)
     (PipeGroup.toString pipeGroup)
+
+renderScoreToScreenMatrix:: Int -> ScreenMatrix -> ScreenMatrix
+renderScoreToScreenMatrix score screenMtx = renderObjectToScreenMatrix scoreOriginX 0 scoreText screenMtx where
+  scoreText = "Score: " ++ (show score)
+  scoreTextLength = length scoreText
+  scoreOriginX = ((getWidthScreenMatrix screenMtx) - scoreTextLength) `div` 2
 
 renderObjectToScreenMatrix :: Int -> Int -> String -> ScreenMatrix -> ScreenMatrix
 renderObjectToScreenMatrix originX originY stringRepresentation =
@@ -113,3 +144,23 @@ formatScreenMatrixToRender screenMatrix =
 
 formatScreenMatrixLineToRender :: ScreenMatrixLine -> String
 formatScreenMatrixLineToRender = intercalate ""
+
+renderTextToScreenMatrix :: [String] -> ScreenMatrix -> ScreenMatrix
+renderTextToScreenMatrix (string:[]) screenMtx = renderObjectToScreenMatrix stringStartX stringStartY string screenMtx where
+  stringLength = length string
+  stringStartX = (getWidthScreenMatrix screenMtx - stringLength) `div` 2
+  stringStartY = (getHeightScreenMatrix screenMtx) `div` 2
+renderTextToScreenMatrix (h:t) screenMtx= renderTextToScreenMatrix t (renderTextToScreenMatrixRecursive [h] ((length t) *2) screenMtx)
+
+renderTextToScreenMatrixRecursive :: [String] -> Int -> ScreenMatrix -> ScreenMatrix
+renderTextToScreenMatrixRecursive (string:[]) spacing screenMtx= renderObjectToScreenMatrix stringStartX stringStartY string screenMtx where
+  stringLength = length string
+  stringStartX = (getWidthScreenMatrix screenMtx - stringLength) `div` 2
+  stringStartY = ((getHeightScreenMatrix screenMtx) `div` 2) - spacing
+
+
+getHeightScreenMatrix :: ScreenMatrix -> Int
+getHeightScreenMatrix screenMtx = length screenMtx
+
+getWidthScreenMatrix :: ScreenMatrix -> Int
+getWidthScreenMatrix screenMtx = length $ head screenMtx
