@@ -7,7 +7,9 @@ import Models.Pipe (Pipe (Pipe))
 import qualified Models.Pipe as Pipe
 
 data PipeGroup = PipeGroup
-  { topPipe :: Pipe,
+  { originX :: Int,
+    originY :: Int,
+    topPipe :: Pipe,
     bottomPipe :: Pipe,
     width :: Int,
     holeHeight :: Int
@@ -16,7 +18,7 @@ data PipeGroup = PipeGroup
 
 create :: Int -> Int -> Int -> Int -> Int -> Int -> PipeGroup
 create originX originY width height holeOriginY holeHeight =
-  PipeGroup topPipe bottomPipe width holeHeight
+  PipeGroup originX originY topPipe bottomPipe width holeHeight
   where
     topPipe = Pipe originX originY width topPipeHeight Pipe.DOWN
     topPipeHeight = holeOriginY - originY
@@ -26,8 +28,16 @@ create originX originY width height holeOriginY holeHeight =
 
 tick :: PipeGroup -> PipeGroup
 tick pipeGroup =
-  PipeGroup newTopPipe newBottomPipe (width pipeGroup) (holeHeight pipeGroup)
+  PipeGroup
+    newOriginX
+    newOriginY
+    newTopPipe
+    newBottomPipe
+    (width pipeGroup)
+    (holeHeight pipeGroup)
   where
+    newOriginX = Pipe.originX newTopPipe
+    newOriginY = Pipe.originY newTopPipe
     newTopPipe = Pipe.tick (topPipe pipeGroup)
     newBottomPipe = Pipe.tick (bottomPipe pipeGroup)
 
