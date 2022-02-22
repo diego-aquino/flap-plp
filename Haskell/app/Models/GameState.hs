@@ -11,7 +11,7 @@ type PLAYING = "PLAYING"
 
 type GAMEOVER = "GAMEOVER"
 
-data ScreenType = PAUSE | PLAYING | GAMEOVER deriving (Show, Eq)
+data ScreenType = PAUSED | PLAYING | GAMEOVER deriving (Show, Eq)
 
 data GameState = GameState
   { bird :: Bird,
