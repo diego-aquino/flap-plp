@@ -55,7 +55,7 @@ createGameController = do
   let initialBirdOriginY = terminalHeight `div` 2 - 3
 
   let bird = Bird birdOriginX initialBirdOriginY 0
-  let gameState = GameState bird [] 0 0 GameState.PLAYING
+  let gameState = GameState bird [] 0 0 GameState.PAUSED
   let gameController = GameController gameState terminal
 
   return gameController
@@ -79,7 +79,9 @@ run controller elapsedTime = do
       -- [... criar pipe groups espaçados em `pipeGroupSpaceX` e alturas aleatórias]
 
       let stateWithInput = handlePlayerInput (gameState controller) lastCharacter
-      let tickedStateWithInput = tick stateWithInput elapsedTime
+      let tickedStateWithInput = if (GameState.screenType $ gameState controller) == GameState.PLAYING
+                                then tick stateWithInput elapsedTime
+                                else stateWithInput
 
       Terminal.resetStylesAndCursor
       GameScreen.render tickedStateWithInput
@@ -93,8 +95,10 @@ run controller elapsedTime = do
 handlePlayerInput :: GameState -> Maybe Char -> GameState
 handlePlayerInput state playerInput =
   if playerInput == Just '\n'
-    then jumpBird state (GameState.bird state)
-    else state
+    then if (GameState.screenType state) == GameState.PLAYING then jumpBird state (GameState.bird state)
+    else if (GameState.screenType state) == GameState.PAUSED then GameState.setScreenType state GameState.PLAYING
+    else GameState.setScreenType state GameState.PLAYING
+  else state
 
 tick :: GameState -> Int -> GameState
 tick state elapsedTime =
