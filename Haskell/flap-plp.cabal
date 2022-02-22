@@ -62,6 +62,7 @@ executable flap-plp
       Models.Pipe,
       Models.Area,
       Models.Line,
+      Models.LocalStorage,
       Utils.Lists,
       Utils.Strings,
       Utils.Maybe
