@@ -6,16 +6,18 @@ import qualified Models.Area as Area
 data Bird = Bird
   { originX :: Int,
     originY :: Int,
-    verticalSpeed :: Int
+    verticalSpeed :: Float
   }
   deriving (Show)
 
-tick :: Bird -> Bird
-tick bird = setOriginY bird (originY bird + verticalSpeed bird)
+tick :: Bird -> Float -> Bird
+tick bird gravity = Bird (originX bird) newOriginY newVerticalSpeed
+  where
+    newOriginY = originY bird + floor (verticalSpeed bird)
+    newVerticalSpeed = verticalSpeed bird + gravity
 
-setOriginY :: Bird -> Int -> Bird
-setOriginY bird newOriginY =
-  Bird (originX bird) newOriginY (verticalSpeed bird)
+setVerticalSpeed :: Bird -> Float -> Bird
+setVerticalSpeed bird = Bird (originX bird) (originY bird)
 
 getArea :: Bird -> Area
 getArea bird =
