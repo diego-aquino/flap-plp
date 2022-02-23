@@ -8,8 +8,8 @@ import Models.GameState (GameState (GameState))
 import qualified Models.GameState as GameState
 import qualified Models.PipeGroup as PipeGroup
 import Models.Terminal (Terminal (Terminal))
-import qualified Models.Terminal as Termina
 import qualified Models.Terminal as Terminal
+import qualified Models.LocalStorage as LocalStorage
 
 microSecondsInASecond :: Int
 microSecondsInASecond = 1000000
@@ -50,12 +50,13 @@ data GameController = GameController
 createGameController :: IO GameController
 createGameController = do
   terminal <- Terminal.createTerminal
-  terminalHeight <- Termina.getTerminalHeight
+  terminalHeight <- Terminal.getTerminalHeight
 
   let initialBirdOriginY = terminalHeight `div` 2 - 3
 
   let bird = Bird birdOriginX initialBirdOriginY 0
-  let gameState = GameState bird [] 0 0 GameState.PAUSED
+  highestScore <- LocalStorage.readHighScore
+  let gameState = GameState bird [] 0 highestScore GameState.PAUSED
   let gameController = GameController gameState terminal
 
   return gameController
