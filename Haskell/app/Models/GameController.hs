@@ -95,8 +95,10 @@ run controller elapsedTime = do
 
 handlePlayerInput :: GameState -> Maybe Char -> GameState
 handlePlayerInput state playerInput =
-  if playerInput == Just '\n' then
-    GameState.handlePlayerInputScreen state
+  if playerInput == Just '\n'
+    then if (GameState.screenType state) == GameState.PLAYING then Gamestate.jumpBird state (GameState.bird state)
+    else if (GameState.screenType state) == GameState.PAUSED then GameState.setScreenType state GameState.PLAYING
+    else GameState.setScreenType state GameState.PLAYING
   else state
 
 tick :: GameState -> Int -> GameState

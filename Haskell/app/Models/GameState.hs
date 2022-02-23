@@ -44,11 +44,6 @@ setScreenType :: GameState -> ScreenType -> GameState
 setScreenType gameState newScreenType =
   GameState (bird gameState) (pipeGroups gameState) (score gameState) (highestScore gameState) newScreenType
 
-handlePlayerInputScreen :: GameState -> GameState
-handlePlayerInputScreen state =
-    if (screenType state) == PLAYING then jumpBird state (bird state)
-    else if (screenType state) == PAUSED then setScreenType state PLAYING
-    else setScreenType state PLAYING
-
 jumpBird :: GameState -> Bird -> GameState
-jumpBird state bird = setBird state (setVerticalSpeed bird birdJumpVerticalSpeed)
+jumpBird state bird =
+  setBird state (setVerticalSpeed bird birdJumpVerticalSpeed)
