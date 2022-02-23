@@ -26,6 +26,9 @@ gravity = 0.2
 birdTickFPS :: Int
 birdTickFPS = 20
 
+scoreTickFPS :: Int
+scoreTickFPS = 20
+
 pipeWidth :: Int
 pipeWidth = 5
 
@@ -97,14 +100,20 @@ handlePlayerInput state playerInput =
   else state
 
 tick :: GameState -> Int -> GameState
-tick state elapsedTime =
-  if shouldTickBird
-    then GameState.setBird state (Bird.tick bird gravity)
-    else state
+tick state elapsedTime = scoreTickState
   where
     shouldTickBird =
       elapsedTime `mod` (microSecondsInASecond `div` birdTickFPS) == 0
     bird = GameState.bird state
+    birdTickState = if shouldTickBird
+    then GameState.setBird state (Bird.tick bird gravity)
+    else state
+
+    shouldAddScore = elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
+    scoreIncrement = 1
+    scoreTickState = if shouldAddScore
+    then GameState.incrementScore birdTickState scoreIncrement
+    else state
 
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
