@@ -26,9 +26,6 @@ gravity = 0.2
 birdTickFPS :: Int
 birdTickFPS = 20
 
-birdJumpVerticalSpeed :: Float
-birdJumpVerticalSpeed = -2
-
 pipeWidth :: Int
 pipeWidth = 5
 
@@ -95,10 +92,8 @@ run controller elapsedTime = do
 
 handlePlayerInput :: GameState -> Maybe Char -> GameState
 handlePlayerInput state playerInput =
-  if playerInput == Just '\n'
-    then if (GameState.screenType state) == GameState.PLAYING then jumpBird state (GameState.bird state)
-    else if (GameState.screenType state) == GameState.PAUSED then GameState.setScreenType state GameState.PLAYING
-    else GameState.setScreenType state GameState.PLAYING
+  if playerInput == Just '\n' then
+    GameState.handlePlayerInputScreen state
   else state
 
 tick :: GameState -> Int -> GameState
@@ -114,7 +109,3 @@ tick state elapsedTime =
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
   GameController newState (terminal controller)
-
-jumpBird :: GameState -> Bird -> GameState
-jumpBird state bird =
-  GameState.setBird state (Bird.setVerticalSpeed bird birdJumpVerticalSpeed)
