@@ -2,7 +2,7 @@
 
 module Models.GameState where
 
-import Models.Bird (Bird,setVerticalSpeed)
+import Models.Bird (Bird, setVerticalSpeed)
 import Models.PipeGroup (PipeGroup)
 
 type PAUSED = "PAUSED"
@@ -41,8 +41,7 @@ setHighestScore gameState newHighestScore =
   GameState (bird gameState) (pipeGroups gameState) (score gameState) newHighestScore (screenType gameState)
 
 setScreenType :: GameState -> ScreenType -> GameState
-setScreenType gameState newScreenType =
-  GameState (bird gameState) (pipeGroups gameState) (score gameState) (highestScore gameState) newScreenType
+setScreenType gameState = GameState (bird gameState) (pipeGroups gameState) (score gameState) (highestScore gameState)
 
 jumpBird :: GameState -> Bird -> GameState
 jumpBird state bird =
