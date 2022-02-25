@@ -81,8 +81,8 @@ setPipeGroupToState state elapsedTime holeOriginY pipeGroupHeight =
   if shouldCreatePipeGroup
     then 
       let newPipeGroup = PipeGroup.create pipeGroupOriginX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
-      let newStatePipeGroup = [GameState.pipeGroups, newPipeGroup]
-      let newState = GameState.setPipeGroups (gameState controller) newStatePipeGroup
+      let newPipeGroupList = GameState.pipeGroups ++ newPipeGroup
+      let newState = GameState.setPipeGroups (gameState controller) newPipeGroupList
       return newState
     else state
   where 
