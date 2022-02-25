@@ -48,9 +48,6 @@ pipeGroupOriginX = Terminal.getTerminalWidth + 1
 pipeGroupHoleHeight :: Int
 pipeGroupHoleHeight = 5
 
-pipeGroupSpaceX :: Int
-pipeGroupSpaceX = 4
-
 birdOriginX :: Int
 birdOriginX = 5
 
