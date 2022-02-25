@@ -27,6 +27,6 @@ getArea bird =
 
 getStringRepresentation :: Bird -> String
 getStringRepresentation bird
-  | verticalSpeed bird < 0 = "   (.\n" ++ "==  __>"
+  | verticalSpeed bird < 0 = "   . 7\n" ++ " // _/"
   | verticalSpeed bird > 0 = "\\\\ .\n" ++ " \\\\__\\"
   | otherwise = "== (.\n" ++ " \\___\\"
