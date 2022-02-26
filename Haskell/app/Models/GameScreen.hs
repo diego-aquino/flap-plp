@@ -22,9 +22,9 @@ type ScreenMatrix = [ScreenMatrixLine]
 
 render :: GameState -> IO ()
 render state
-  | (GameState.screenType state) == GameState.PLAYING = renderPlayingScreen state
-  | (GameState.screenType state) == GameState.PAUSED = renderPausedScreen state
-  | (GameState.screenType state) == GameState.GAMEOVER = renderGameoverScreen state
+  | GameState.screenType state == GameState.PLAYING = renderPlayingScreen state
+  | GameState.screenType state == GameState.GAMEOVER = renderGameoverScreen state
+  | otherwise = renderPausedScreen state
 
 renderGameoverScreen :: GameState -> IO ()
 renderGameoverScreen gameState = do
