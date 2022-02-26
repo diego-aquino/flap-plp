@@ -63,7 +63,8 @@ createGameController = do
   let initialBirdOriginY = terminalHeight `div` 2 - 3
 
   let bird = Bird birdOriginX initialBirdOriginY 0
-  let gameState = GameState bird [] 0 0 GameState.PLAYING
+  highestScore <- LocalStorage.readHighScore
+  let gameState = GameState bird [] 0 highestScore GameState.PLAYING
   let gameController = GameController gameState terminal
 
   return gameController
@@ -72,20 +73,6 @@ initGameLoop :: IO ()
 initGameLoop = do
   gameController <- createGameController
   run gameController 0
-
-genRandomPipeHeights :: Int -> Int -> IO Int
-genRandomPipeHeights x y = getStdRandom (randomR (x, y))
-
-setPipeGroupToState :: GameState -> Int -> Int -> Int -> Int -> GameState
-setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
-  if shouldCreatePipeGroup
-    then newState
-    else state
-  where
-    shouldCreatePipeGroup = elapsedTime `mod` timeBetweenPipeCreations == 0
-    newPipeGroupList = GameState.pipeGroups state ++ [newPipeGroup]
-    newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
-    newState = GameState.setPipeGroups state newPipeGroupList
 
 run :: GameController -> Int -> IO ()
 run controller elapsedTime = do
@@ -129,6 +116,20 @@ handlePlayerInput state playerInput =
         then GameState.jumpBird state (GameState.bird state)
         else GameState.setScreenType state GameState.PLAYING
     else state
+
+genRandomPipeHeights :: Int -> Int -> IO Int
+genRandomPipeHeights x y = getStdRandom (randomR (x, y))
+
+setPipeGroupToState :: GameState -> Int -> Int -> Int -> Int -> GameState
+setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
+  if shouldCreatePipeGroup
+    then newState
+    else state
+  where
+    shouldCreatePipeGroup = elapsedTime `mod` timeBetweenPipeCreations == 0
+    newPipeGroupList = GameState.pipeGroups state ++ [newPipeGroup]
+    newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
+    newState = GameState.setPipeGroups state newPipeGroupList
 
 tick :: GameState -> Int -> GameState
 tick state elapsedTime =
