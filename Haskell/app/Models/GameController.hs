@@ -52,6 +52,12 @@ pipeGroupHoleHeight = 10
 birdOriginX :: Int
 birdOriginX = 5
 
+terminalWidth :: Int
+terminalWidth = do
+  terminalWidth <- Terminal.getTerminalWidth
+  let width = terminalWidth
+  return width
+
 data GameController = GameController
   {gameState :: GameState, terminal :: Terminal}
 
@@ -97,7 +103,6 @@ run controller elapsedTime = do
     then return ()
     else do
       terminalHeight <- Terminal.getTerminalHeight
-      terminalWidth <- Terminal.getTerminalWidth
       holeOriginY <- genRandomPipeHeights 3 (terminalHeight - pipeGroupHoleHeight - 3)
 
       let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 2
@@ -158,7 +163,7 @@ tickScoreIfNecessary state elapsedTime =
 tickPipeGroupsIfNecessary :: GameState -> Int -> GameState
 tickPipeGroupsIfNecessary state elapsedTime =
   if shouldTickPipe
-    then GameState.setPipeGroups state (tickAllPipeGroups pipeGroup)
+    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup) terminalWidth)
     else state
   where
     shouldTickPipe = elapsedTime `mod` (microSecondsInASecond `div` pipeTickFPS) == 0
@@ -166,6 +171,10 @@ tickPipeGroupsIfNecessary state elapsedTime =
 
 tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
 tickAllPipeGroups pipeGroupList = [PipeGroup.tick pipeGroup | pipeGroup <- pipeGroupList]
+
+removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> Int -> [PipeGroup.PipeGroup]
+removePipeGroupIfNecessary (headPipeGroup:tailPipeGroup) width = if (PipeGroup.originX headPipeGroup) + width <= 0 then [tailPipeGroup]
+                                          else [headPipeGroup:tailPipeGroup]
 
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
