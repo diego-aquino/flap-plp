@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 module Models.Bird where
 
 import Models.Area
@@ -24,4 +26,7 @@ getArea bird =
   Area.createFromString (originX bird) (originY bird) (getStringRepresentation bird)
 
 getStringRepresentation :: Bird -> String
-getStringRepresentation bird = "== (.\n" ++ " \\___\\"
+getStringRepresentation bird
+  | verticalSpeed bird < 0 = "   . 7\n" ++ " // _/"
+  | verticalSpeed bird > 0 = "\\\\ .\n" ++ " \\\\__\\"
+  | otherwise = "== (.\n" ++ " \\___\\"

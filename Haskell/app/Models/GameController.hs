@@ -6,10 +6,10 @@ import qualified Models.Bird as Bird
 import qualified Models.GameScreen as GameScreen
 import Models.GameState (GameState (GameState))
 import qualified Models.GameState as GameState
+import qualified Models.LocalStorage as LocalStorage
 import qualified Models.PipeGroup as PipeGroup
 import Models.Terminal (Terminal (Terminal))
 import qualified Models.Terminal as Terminal
-import qualified Models.LocalStorage as LocalStorage
 
 microSecondsInASecond :: Int
 microSecondsInASecond = 1000000
@@ -80,9 +80,10 @@ run controller elapsedTime = do
       -- [... criar pipe groups espaçados em `pipeGroupSpaceX` e alturas aleatórias]
 
       let stateWithInput = handlePlayerInput (gameState controller) lastCharacter
-      let tickedStateWithInput = if (GameState.screenType $ gameState controller) == GameState.PLAYING
-                                then tick stateWithInput elapsedTime
-                                else stateWithInput
+      let tickedStateWithInput =
+            if (GameState.screenType $ gameState controller) == GameState.PLAYING
+              then tick stateWithInput elapsedTime
+              else stateWithInput
 
       Terminal.resetStylesAndCursor
       GameScreen.render tickedStateWithInput
@@ -96,10 +97,14 @@ run controller elapsedTime = do
 handlePlayerInput :: GameState -> Maybe Char -> GameState
 handlePlayerInput state playerInput =
   if playerInput == Just '\n'
-    then if (GameState.screenType state) == GameState.PLAYING then GameState.jumpBird state (GameState.bird state)
-    else if (GameState.screenType state) == GameState.PAUSED then GameState.setScreenType state GameState.PLAYING
-    else GameState.setScreenType state GameState.PLAYING
-  else state
+    then
+      if (GameState.screenType state) == GameState.PLAYING
+        then GameState.jumpBird state (GameState.bird state)
+        else
+          if (GameState.screenType state) == GameState.PAUSED
+            then GameState.setScreenType state GameState.PLAYING
+            else GameState.setScreenType state GameState.PLAYING
+    else state
 
 tick :: GameState -> Int -> GameState
 tick state elapsedTime = scoreTickState
@@ -107,15 +112,17 @@ tick state elapsedTime = scoreTickState
     shouldTickBird =
       elapsedTime `mod` (microSecondsInASecond `div` birdTickFPS) == 0
     bird = GameState.bird state
-    birdTickState = if shouldTickBird
-    then GameState.setBird state (Bird.tick bird gravity)
-    else state
+    birdTickState =
+      if shouldTickBird
+        then GameState.setBird state (Bird.tick bird gravity)
+        else state
 
     shouldAddScore = elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
     scoreIncrement = 1
-    scoreTickState = if shouldAddScore
-    then GameState.incrementScore birdTickState scoreIncrement
-    else state
+    scoreTickState =
+      if shouldAddScore
+        then GameState.incrementScore birdTickState scoreIncrement
+        else state
 
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
