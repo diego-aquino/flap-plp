@@ -175,8 +175,8 @@ tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
 tickAllPipeGroups pipeGroupList = [PipeGroup.tick pipeGroup | pipeGroup <- pipeGroupList]
 
 removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> Int -> [PipeGroup.PipeGroup]
-removePipeGroupIfNecessary (headPipeGroup:tailPipeGroup) width = if (PipeGroup.originX headPipeGroup) + width <= 0 then [tailPipeGroup]
-                                          else [headPipeGroup:tailPipeGroup]
+removePipeGroupIfNecessary (headPipeGroup:tailPipeGroup) width = if (PipeGroup.originX headPipeGroup) + width <= 0 then tailPipeGroup
+                                          else headPipeGroup:tailPipeGroup
 
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
