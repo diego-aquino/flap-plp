@@ -78,6 +78,7 @@ executable flap-plp
       process,
       terminal-size,
       ansi-terminal,
+      random,
       signal
 
     -- Directories containing source files.

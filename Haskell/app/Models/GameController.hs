@@ -34,16 +34,13 @@ birdJumpVerticalSpeed :: Float
 birdJumpVerticalSpeed = -2
 
 timeBetweenPipeCreations:: Int
-timebetweenPipeCreations = 1000000 * 4
+timeBetweenPipeCreations = 2000000 
 
 pipeWidth :: Int
 pipeWidth = 5
 
 pipeGroupOriginY :: Int
 pipeGroupOriginY = 0
-
-pipeGroupOriginX :: Int
-pipeGroupOriginX = Terminal.getTerminalWidth + 1
 
 pipeGroupHoleHeight :: Int
 pipeGroupHoleHeight = 5
@@ -76,17 +73,16 @@ initGameLoop = do
 genRandomPipeHeights:: Int -> Int -> IO Int
 genRandomPipeHeights x y = getStdRandom(randomR (x,y))
 
-setPipeGroupToState :: GameState -> Int -> Int -> Int -> GameState
-setPipeGroupToState state elapsedTime holeOriginY pipeGroupHeight =
+setPipeGroupToState :: GameState -> Int -> Int -> Int -> Int -> GameState
+setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight = 
   if shouldCreatePipeGroup
-    then 
-      let newPipeGroup = PipeGroup.create pipeGroupOriginX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
-      let newPipeGroupList = GameState.pipeGroups ++ newPipeGroup
-      let newState = GameState.setPipeGroups (gameState controller) newPipeGroupList
-      return newState
+    then newState
     else state
   where 
     shouldCreatePipeGroup = elapsedTime `mod` timeBetweenPipeCreations == 0
+    newPipeGroupList = (GameState.pipeGroups state) ++ [newPipeGroup]
+    newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
+    newState = GameState.setPipeGroups state newPipeGroupList
 
 run :: GameController -> Int -> IO ()
 run controller elapsedTime = do
@@ -98,12 +94,16 @@ run controller elapsedTime = do
     then return ()
     else do
       terminalHeight <- Terminal.getTerminalHeight
-      let setPipeGroupHeight = terminalHeight - pipeGroupOriginY - 1
-      let setHoleOriginY = genRandomPipeHeights 3 (terminalHeight - 3)
+      terminalWidth <- Terminal.getTerminalWidth
+      holeOriginY <- genRandomPipeHeights 3 (terminalHeight - 3)
+
+      let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 1
+      let pipeGroupOriginX = terminalWidth + 1
+      let setHoleOriginY = holeOriginY
       
-      let currentState = setPipeGroupToState gameState elapsedTime setHoleOriginY setPipeGroupHeight
+      let currentState = setPipeGroupToState (gameState controller) elapsedTime pipeGroupOriginX setHoleOriginY pipeGroupHeight
        
-      let stateWithInput = handlePlayerInput (currentState controller) lastCharacter
+      let stateWithInput = handlePlayerInput currentState lastCharacter
       let tickedStateWithInput = tick stateWithInput elapsedTime
 
       Terminal.resetStylesAndCursor
@@ -133,14 +133,14 @@ tickBirdIfNecessary state elapsedTime =
       elapsedTime `mod` (microSecondsInASecond `div` birdTickFPS) == 0 
     bird = GameState.bird state
 
-tickAllPipeGroups :: [PipeGroup] -> [PipeGroup]
+tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
 tickAllPipeGroups pipeGroupList = [PipeGroup.tick pipeGroup | pipeGroup <- pipeGroupList] 
 
 tickPipeGroupsIfNecessary :: GameState -> Int -> GameState
 tickPipeGroupsIfNecessary state elapsedTime = 
   if shouldTickPipe
     then if length pipeGroup == 1 
-      then GameState.setPipeGroups state [(PipeGroup.tick pipeGroup !! 0)] 
+      then GameState.setPipeGroups state [(PipeGroup.tick (pipeGroup !! 0))] 
       else GameState.setPipeGroups state (tickAllPipeGroups pipeGroup)
     else state 
   where 
