@@ -100,7 +100,7 @@ run controller elapsedTime = do
       terminalWidth <- Terminal.getTerminalWidth
       holeOriginY <- genRandomPipeHeights 3 (terminalHeight - pipeGroupHoleHeight - 3)
 
-      let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 1
+      let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 2
       let pipeGroupOriginX = terminalWidth + 1
       let setHoleOriginY = holeOriginY
 
