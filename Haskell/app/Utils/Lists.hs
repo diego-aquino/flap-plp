@@ -5,24 +5,7 @@ import qualified Data.Sequence as Sequence
 
 createMatrix :: Int -> Int -> (Int -> Int -> a) -> [[a]]
 createMatrix width height createElement =
-  createMatrixRecursive width height createElement 0
-
-createMatrixRecursive :: Int -> Int -> (Int -> Int -> a) -> Int -> [[a]]
-createMatrixRecursive width height createElement currentRow
-  | height <= 0 = []
-  | otherwise =
-    matrixLine :
-    createMatrixRecursive width (height - 1) createElement (currentRow + 1)
-  where
-    matrixLine = createMatrixLine width currentRow createElement
-
-createMatrixLine :: Int -> Int -> (Int -> Int -> a) -> [a]
-createMatrixLine width currentRow createElement =
-  mapWithIndex
-    (\element currentColumn -> createElement currentRow currentColumn)
-    matrixLineTemplate
-  where
-    matrixLineTemplate = replicate width 0
+  [[createElement row column | column <- [0 .. (width -1)]] | row <- [0 .. (height -1)]]
 
 mapWithIndex :: (a -> Int -> b) -> [a] -> [b]
 mapWithIndex function list =
