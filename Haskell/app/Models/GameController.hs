@@ -64,7 +64,7 @@ createGameController = do
 
   let bird = Bird birdOriginX initialBirdOriginY 0
   highestScore <- LocalStorage.readHighScore
-  let gameState = GameState bird [] 0 highestScore GameState.PLAYING
+  let gameState = GameState bird [] 0 highestScore GameState.PAUSED
   let gameController = GameController gameState terminal
 
   return gameController
@@ -126,7 +126,9 @@ setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
     then newState
     else state
   where
-    shouldCreatePipeGroup = elapsedTime `mod` timeBetweenPipeCreations == 0
+    shouldCreatePipeGroup =
+      GameState.screenType state == GameState.PLAYING
+        && elapsedTime `mod` timeBetweenPipeCreations == 0
     newPipeGroupList = GameState.pipeGroups state ++ [newPipeGroup]
     newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
     newState = GameState.setPipeGroups state newPipeGroupList
