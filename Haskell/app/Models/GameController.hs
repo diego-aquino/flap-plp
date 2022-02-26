@@ -9,7 +9,6 @@ import qualified Models.GameState as GameState
 import qualified Models.LocalStorage as LocalStorage
 import qualified Models.PipeGroup as PipeGroup
 import Models.Terminal (Terminal (Terminal))
-import qualified Models.Terminal as Termina
 import qualified Models.Terminal as Terminal
 import System.Random (Random (randomR), getStdRandom)
 
@@ -58,7 +57,7 @@ data GameController = GameController
 createGameController :: IO GameController
 createGameController = do
   terminal <- Terminal.createTerminal
-  terminalHeight <- Termina.getTerminalHeight
+  terminalHeight <- Terminal.getTerminalHeight
 
   let initialBirdOriginY = terminalHeight `div` 2 - 3
 
