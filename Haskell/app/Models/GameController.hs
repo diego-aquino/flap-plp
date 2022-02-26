@@ -51,12 +51,6 @@ pipeGroupHoleHeight = 10
 birdOriginX :: Int
 birdOriginX = 5
 
-terminalWidth :: Int
-terminalWidth = do
-  terminalWidth <- Terminal.getTerminalWidth
-  let width = terminalWidth
-  return width
-
 data GameController = GameController
   {gameState :: GameState, terminal :: Terminal}
 
@@ -89,6 +83,7 @@ run controller elapsedTime = do
     then return ()
     else do
       terminalHeight <- Terminal.getTerminalHeight
+      terminalWidth <- Terminal.getTerminalWidth
       holeOriginY <- genRandomPipeHeights 3 (terminalHeight - pipeGroupHoleHeight - 3)
 
       let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 2
@@ -100,7 +95,7 @@ run controller elapsedTime = do
       let stateWithInput = handlePlayerInput currentState lastCharacter
       let tickedStateWithInput =
             if GameState.screenType (gameState controller) == GameState.PLAYING
-              then tick stateWithInput elapsedTime
+              then tick stateWithInput elapsedTime terminalWidth
               else stateWithInput
 
       Terminal.resetStylesAndCursor
@@ -137,10 +132,10 @@ setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
     newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
     newState = GameState.setPipeGroups state newPipeGroupList
 
-tick :: GameState -> Int -> GameState
-tick state elapsedTime =
+tick :: GameState -> Int -> Int -> GameState
+tick state elapsedTime width =
   tickScoreIfNecessary
-    (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime) elapsedTime)
+    (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime width) elapsedTime)
     elapsedTime
 
 tickBirdIfNecessary :: GameState -> Int -> GameState
@@ -162,12 +157,12 @@ tickScoreIfNecessary state elapsedTime =
     shouldAddScore = elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
     scoreIncrement = 1
 
-tickPipeGroupsIfNecessary :: GameState -> Int -> GameState
-tickPipeGroupsIfNecessary state elapsedTime =
+tickPipeGroupsIfNecessary :: GameState -> Int -> Int -> GameState
+tickPipeGroupsIfNecessary state elapsedTime width =
   if shouldTickPipe
-    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup) terminalWidth)
+    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup) width)
     else state
-  where
+  where 
     shouldTickPipe = elapsedTime `mod` (microSecondsInASecond `div` pipeTickFPS) == 0
     pipeGroup = GameState.pipeGroups state
 
@@ -175,6 +170,7 @@ tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
 tickAllPipeGroups pipeGroupList = [PipeGroup.tick pipeGroup | pipeGroup <- pipeGroupList]
 
 removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> Int -> [PipeGroup.PipeGroup]
+removePipeGroupIfNecessary [] width = []
 removePipeGroupIfNecessary (headPipeGroup:tailPipeGroup) width = if (PipeGroup.originX headPipeGroup) + width <= 0 then tailPipeGroup
                                           else headPipeGroup:tailPipeGroup
 
