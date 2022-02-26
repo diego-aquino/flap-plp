@@ -22,9 +22,9 @@ type ScreenMatrix = [ScreenMatrixLine]
 
 render :: GameState -> IO ()
 render state
-  | (GameState.screenType state) == GameState.PLAYING = renderPlayingScreen state
-  | (GameState.screenType state) == GameState.PAUSED = renderPausedScreen state
-  | (GameState.screenType state) == GameState.GAMEOVER = renderGameoverScreen state
+  | GameState.screenType state == GameState.PLAYING = renderPlayingScreen state
+  | GameState.screenType state == GameState.GAMEOVER = renderGameoverScreen state
+  | otherwise = renderPausedScreen state
 
 renderGameoverScreen :: GameState -> IO ()
 renderGameoverScreen gameState = do
@@ -59,8 +59,8 @@ renderPlayingScreen gameState = do
 
   let populatedScreenMatrix =
         renderScoreToScreenMatrix score $
-          renderPipeGroupsToScreenMatrix pipeGroups $
-            renderBirdToScreenMatrix bird emptyScreenMatrix
+          renderBirdToScreenMatrix bird $
+            renderPipeGroupsToScreenMatrix pipeGroups emptyScreenMatrix
 
   printScreenMatrix populatedScreenMatrix
 
@@ -69,11 +69,12 @@ createEmptyScreenMatrix width height =
   createMatrix width height (\row column -> " ")
 
 renderBirdToScreenMatrix :: Bird -> ScreenMatrix -> ScreenMatrix
-renderBirdToScreenMatrix bird =
+renderBirdToScreenMatrix bird screenMatrix =
   renderObjectToScreenMatrix
     (Bird.originX bird)
     (Bird.originY bird)
-    (Bird.getStringRepresentation bird)
+    (Bird.toString bird)
+    screenMatrix
 
 renderPipeGroupsToScreenMatrix :: [PipeGroup] -> ScreenMatrix -> ScreenMatrix
 renderPipeGroupsToScreenMatrix pipeGroups screenMatrix
@@ -84,11 +85,12 @@ renderPipeGroupsToScreenMatrix pipeGroups screenMatrix
       (renderPipeGroupToScreenMatrix (head pipeGroups) screenMatrix)
 
 renderPipeGroupToScreenMatrix :: PipeGroup -> ScreenMatrix -> ScreenMatrix
-renderPipeGroupToScreenMatrix pipeGroup =
+renderPipeGroupToScreenMatrix pipeGroup screenMatrix =
   renderObjectToScreenMatrix
     (PipeGroup.originX pipeGroup)
     (PipeGroup.originY pipeGroup)
     (PipeGroup.toString pipeGroup)
+    screenMatrix
 
 renderScoreToScreenMatrix :: Int -> ScreenMatrix -> ScreenMatrix
 renderScoreToScreenMatrix score screenMtx = renderObjectToScreenMatrix scoreOriginX 0 scoreText screenMtx
@@ -98,26 +100,46 @@ renderScoreToScreenMatrix score screenMtx = renderObjectToScreenMatrix scoreOrig
     scoreOriginX = ((getWidthScreenMatrix screenMtx) - scoreTextLength) `div` 2
 
 renderObjectToScreenMatrix :: Int -> Int -> String -> ScreenMatrix -> ScreenMatrix
-renderObjectToScreenMatrix originX originY stringRepresentation =
-  mapWithIndex
-    (renderObjectToScreenMatrixLine originX originY stringRepresentation)
-
-renderObjectToScreenMatrixLine :: Int -> Int -> String -> ScreenMatrixLine -> Int -> ScreenMatrixLine
-renderObjectToScreenMatrixLine originX originY stringRepresentation screenMatrixLine lineY =
-  mapWithIndex
-    ( \cellElement cellX ->
-        renderObjectToScreenMatrixLineCell
+renderObjectToScreenMatrix originX originY objectString screenMatrix
+  | originX >= getWidthScreenMatrix screenMatrix = screenMatrix
+  | originX + objectWidth <= 0 = screenMatrix
+  | originY >= getHeightScreenMatrix screenMatrix = screenMatrix
+  | originY + objectHeight <= 0 = screenMatrix
+  | otherwise = mapWithIndex
+    ( \screenMatrixLine lineY ->
+        renderObjectToScreenMatrixLine
           originX
           originY
-          stringRepresentation
-          cellX
+          objectStringLines
+          objectHeight
+          screenMatrixLine
           lineY
-          cellElement
     )
-    screenMatrixLine
+    screenMatrix
+  where
+    objectStringLines = lines objectString
+    objectHeight = length objectStringLines
+    objectWidth = maximum (map length objectStringLines)
 
-renderObjectToScreenMatrixLineCell :: Int -> Int -> String -> Int -> Int -> String -> String
-renderObjectToScreenMatrixLineCell originX originY stringRepresentation cellX lineY cellElement =
+renderObjectToScreenMatrixLine :: Int -> Int -> [String] -> Int -> ScreenMatrixLine -> Int -> ScreenMatrixLine
+renderObjectToScreenMatrixLine originX originY objectStringLines objectHeight screenMatrixLine lineY
+  | lineY < originY || lineY > originY + objectHeight = screenMatrixLine
+  | otherwise =
+    mapWithIndex
+      ( \cellElement cellX ->
+          renderObjectToScreenMatrixLineCell
+            originX
+            originY
+            objectStringLines
+            objectHeight
+            cellX
+            lineY
+            cellElement
+      )
+      screenMatrixLine
+
+renderObjectToScreenMatrixLineCell :: Int -> Int -> [String] -> Int -> Int -> Int -> String -> String
+renderObjectToScreenMatrixLineCell originX originY objectStringLines objectHeight cellX lineY cellElement =
   characterForCell
   where
     characterForCell = justOrDefault objectCharacterForCell cellElement
@@ -130,10 +152,9 @@ renderObjectToScreenMatrixLineCell originX originY stringRepresentation cellX li
     objectMatchingLine = justOrDefault maybeObjectMatchingLine []
     maybeObjectMatchingLine =
       if lineY >= originY
-        && lineY < (originY + length objectLines)
-        then Just (objectLines !! (lineY - originY))
+        && lineY < (originY + objectHeight)
+        then Just (objectStringLines !! (lineY - originY))
         else Nothing
-    objectLines = lines stringRepresentation
 
 printScreenMatrix :: ScreenMatrix -> IO ()
 printScreenMatrix screenMatrix =

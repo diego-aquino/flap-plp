@@ -72,12 +72,13 @@ executable flap-plp
 
     -- Other library packages from which modules are imported.
     build-depends:
-      base ^>=4.14.3.0,
+      base,
       containers,
       directory,
       process,
       terminal-size,
       ansi-terminal,
+      random,
       signal
 
     -- Directories containing source files.

@@ -23,10 +23,10 @@ setVerticalSpeed bird = Bird (originX bird) (originY bird)
 
 getArea :: Bird -> Area
 getArea bird =
-  Area.createFromString (originX bird) (originY bird) (getStringRepresentation bird)
+  Area.createFromString (originX bird) (originY bird) (toString bird)
 
-getStringRepresentation :: Bird -> String
-getStringRepresentation bird
+toString :: Bird -> String
+toString bird
   | verticalSpeed bird < 0 = "   . 7\n" ++ " // _/"
   | verticalSpeed bird > 0 = "\\\\ .\n" ++ " \\\\__\\"
   | otherwise = "== (.\n" ++ " \\___\\"

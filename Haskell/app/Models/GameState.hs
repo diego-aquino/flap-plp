@@ -14,7 +14,7 @@ type GAMEOVER = "GAMEOVER"
 data ScreenType = PAUSED | PLAYING | GAMEOVER deriving (Show, Eq)
 
 birdJumpVerticalSpeed :: Float
-birdJumpVerticalSpeed = -2
+birdJumpVerticalSpeed = -1.4
 
 data GameState = GameState
   { bird :: Bird,
