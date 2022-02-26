@@ -84,7 +84,7 @@ run controller elapsedTime = do
     else do
       terminalHeight <- Terminal.getTerminalHeight
       terminalWidth <- Terminal.getTerminalWidth
-      holeOriginY <- genRandomPipeHeights 3 (terminalHeight - pipeGroupHoleHeight - 3)
+      holeOriginY <- genRandomPipeHeights 3 (terminalHeight - pipeGroupHoleHeight - 5)
 
       let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 2
       let pipeGroupOriginX = terminalWidth + 1
