@@ -9,7 +9,6 @@ import qualified Models.GameState as GameState
 import qualified Models.LocalStorage as LocalStorage
 import qualified Models.PipeGroup as PipeGroup
 import Models.Terminal (Terminal (Terminal))
-import qualified Models.Terminal as Termina
 import qualified Models.Terminal as Terminal
 import System.Random (Random (randomR), getStdRandom)
 
@@ -64,12 +63,13 @@ data GameController = GameController
 createGameController :: IO GameController
 createGameController = do
   terminal <- Terminal.createTerminal
-  terminalHeight <- Termina.getTerminalHeight
+  terminalHeight <- Terminal.getTerminalHeight
 
   let initialBirdOriginY = terminalHeight `div` 2 - 3
 
   let bird = Bird birdOriginX initialBirdOriginY 0
-  let gameState = GameState bird [] 0 0 GameState.PLAYING
+  highestScore <- LocalStorage.readHighScore
+  let gameState = GameState bird [] 0 highestScore GameState.PAUSED
   let gameController = GameController gameState terminal
 
   return gameController
@@ -78,20 +78,6 @@ initGameLoop :: IO ()
 initGameLoop = do
   gameController <- createGameController
   run gameController 0
-
-genRandomPipeHeights :: Int -> Int -> IO Int
-genRandomPipeHeights x y = getStdRandom (randomR (x, y))
-
-setPipeGroupToState :: GameState -> Int -> Int -> Int -> Int -> GameState
-setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
-  if shouldCreatePipeGroup
-    then newState
-    else state
-  where
-    shouldCreatePipeGroup = elapsedTime `mod` timeBetweenPipeCreations == 0
-    newPipeGroupList = GameState.pipeGroups state ++ [newPipeGroup]
-    newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
-    newState = GameState.setPipeGroups state newPipeGroupList
 
 run :: GameController -> Int -> IO ()
 run controller elapsedTime = do
@@ -134,6 +120,22 @@ handlePlayerInput state playerInput =
         then GameState.jumpBird state (GameState.bird state)
         else GameState.setScreenType state GameState.PLAYING
     else state
+
+genRandomPipeHeights :: Int -> Int -> IO Int
+genRandomPipeHeights x y = getStdRandom (randomR (x, y))
+
+setPipeGroupToState :: GameState -> Int -> Int -> Int -> Int -> GameState
+setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
+  if shouldCreatePipeGroup
+    then newState
+    else state
+  where
+    shouldCreatePipeGroup =
+      GameState.screenType state == GameState.PLAYING
+        && elapsedTime `mod` timeBetweenPipeCreations == 0
+    newPipeGroupList = GameState.pipeGroups state ++ [newPipeGroup]
+    newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
+    newState = GameState.setPipeGroups state newPipeGroupList
 
 tick :: GameState -> Int -> GameState
 tick state elapsedTime =

@@ -36,6 +36,10 @@ Para utilizar a versão funcional desse projeto, escrita em [Haskell](https://ww
    cabal run
    ```
 
+Para uma melhor experiência, recomenda-se ajustar o tamanho do terminal para as seguintes dimensões>
+- Altura: ~30 caracteres
+- Largura: ~130 caracteres
+
 ## Arquitetura
 
 Na implementação, buscamos definir uma arquitetura de entidades e módulos, de modo a manter coesão e facilitar mudanças futuras. Abaixo, estão os principais módulos criados e os seus relacionamentos:
