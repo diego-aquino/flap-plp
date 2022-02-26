@@ -31,7 +31,7 @@ pipeTickFPS :: Int
 pipeTickFPS = 20
 
 birdJumpVerticalSpeed :: Float
-birdJumpVerticalSpeed = -2
+birdJumpVerticalSpeed = -1.4
 
 timeBetweenPipeCreations:: Int
 timeBetweenPipeCreations = 2000000 
@@ -43,7 +43,7 @@ pipeGroupOriginY :: Int
 pipeGroupOriginY = 0
 
 pipeGroupHoleHeight :: Int
-pipeGroupHoleHeight = 5
+pipeGroupHoleHeight = 10
 
 birdOriginX :: Int
 birdOriginX = 5
@@ -95,7 +95,7 @@ run controller elapsedTime = do
     else do
       terminalHeight <- Terminal.getTerminalHeight
       terminalWidth <- Terminal.getTerminalWidth
-      holeOriginY <- genRandomPipeHeights 3 (terminalHeight - 3)
+      holeOriginY <- genRandomPipeHeights 3 (terminalHeight - pipeGroupHoleHeight - 3)
 
       let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 1
       let pipeGroupOriginX = terminalWidth + 1
