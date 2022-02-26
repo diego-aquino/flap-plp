@@ -59,8 +59,8 @@ renderPlayingScreen gameState = do
 
   let populatedScreenMatrix =
         renderScoreToScreenMatrix score $
-          renderPipeGroupsToScreenMatrix pipeGroups $
-            renderBirdToScreenMatrix bird emptyScreenMatrix
+          renderBirdToScreenMatrix bird $
+             renderPipeGroupsToScreenMatrix pipeGroups emptyScreenMatrix
 
   printScreenMatrix populatedScreenMatrix
 
