@@ -32,7 +32,7 @@ renderGameoverScreen gameState = do
   terminalHeight <- Terminal.getTerminalHeight
 
   let emptyScreenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
-  let populatedScreenMatrix = renderTextToScreenMatrix ["Game Over","Press <Enter> to play again","High Score: "++ (show $ GameState.highestScore gameState)] emptyScreenMatrix
+  let populatedScreenMatrix = renderTextToScreenMatrix ["Game Over", "Press <Enter> to play again", "High Score: " ++ (show $ GameState.highestScore gameState)] emptyScreenMatrix
 
   printScreenMatrix populatedScreenMatrix
 
@@ -42,7 +42,7 @@ renderPausedScreen gameState = do
   terminalHeight <- Terminal.getTerminalHeight
 
   let emptyScreenMatrix = createEmptyScreenMatrix terminalWidth (terminalHeight - 1)
-  let populatedScreenMatrix = renderTextToScreenMatrix ["Welcome to Flap-PLP","Press <Enter> to flap your wings","High Score: "++ (show $ GameState.highestScore gameState)] emptyScreenMatrix
+  let populatedScreenMatrix = renderTextToScreenMatrix ["Welcome to Flap-PLP", "Press <Enter> to flap your wings", "High Score: " ++ (show $ GameState.highestScore gameState)] emptyScreenMatrix
 
   printScreenMatrix populatedScreenMatrix
 
@@ -90,11 +90,12 @@ renderPipeGroupToScreenMatrix pipeGroup =
     (PipeGroup.originY pipeGroup)
     (PipeGroup.toString pipeGroup)
 
-renderScoreToScreenMatrix:: Int -> ScreenMatrix -> ScreenMatrix
-renderScoreToScreenMatrix score screenMtx = renderObjectToScreenMatrix scoreOriginX 0 scoreText screenMtx where
-  scoreText = "Score: " ++ (show score)
-  scoreTextLength = length scoreText
-  scoreOriginX = ((getWidthScreenMatrix screenMtx) - scoreTextLength) `div` 2
+renderScoreToScreenMatrix :: Int -> ScreenMatrix -> ScreenMatrix
+renderScoreToScreenMatrix score screenMtx = renderObjectToScreenMatrix scoreOriginX 0 scoreText screenMtx
+  where
+    scoreText = "Score: " ++ (show score)
+    scoreTextLength = length scoreText
+    scoreOriginX = ((getWidthScreenMatrix screenMtx) - scoreTextLength) `div` 2
 
 renderObjectToScreenMatrix :: Int -> Int -> String -> ScreenMatrix -> ScreenMatrix
 renderObjectToScreenMatrix originX originY stringRepresentation =
@@ -146,18 +147,19 @@ formatScreenMatrixLineToRender :: ScreenMatrixLine -> String
 formatScreenMatrixLineToRender = intercalate ""
 
 renderTextToScreenMatrix :: [String] -> ScreenMatrix -> ScreenMatrix
-renderTextToScreenMatrix (string:[]) screenMtx = renderObjectToScreenMatrix stringStartX stringStartY string screenMtx where
-  stringLength = length string
-  stringStartX = (getWidthScreenMatrix screenMtx - stringLength) `div` 2
-  stringStartY = (getHeightScreenMatrix screenMtx) `div` 2
-renderTextToScreenMatrix (h:t) screenMtx= renderTextToScreenMatrix t (renderTextToScreenMatrixRecursive [h] ((length t) *2) screenMtx)
+renderTextToScreenMatrix (string : []) screenMtx = renderObjectToScreenMatrix stringStartX stringStartY string screenMtx
+  where
+    stringLength = length string
+    stringStartX = (getWidthScreenMatrix screenMtx - stringLength) `div` 2
+    stringStartY = (getHeightScreenMatrix screenMtx) `div` 2
+renderTextToScreenMatrix (h : t) screenMtx = renderTextToScreenMatrix t (renderTextToScreenMatrixRecursive [h] ((length t) * 2) screenMtx)
 
 renderTextToScreenMatrixRecursive :: [String] -> Int -> ScreenMatrix -> ScreenMatrix
-renderTextToScreenMatrixRecursive (string:[]) spacing screenMtx= renderObjectToScreenMatrix stringStartX stringStartY string screenMtx where
-  stringLength = length string
-  stringStartX = (getWidthScreenMatrix screenMtx - stringLength) `div` 2
-  stringStartY = ((getHeightScreenMatrix screenMtx) `div` 2) - spacing
-
+renderTextToScreenMatrixRecursive (string : []) spacing screenMtx = renderObjectToScreenMatrix stringStartX stringStartY string screenMtx
+  where
+    stringLength = length string
+    stringStartX = (getWidthScreenMatrix screenMtx - stringLength) `div` 2
+    stringStartY = ((getHeightScreenMatrix screenMtx) `div` 2) - spacing
 
 getHeightScreenMatrix :: ScreenMatrix -> Int
 getHeightScreenMatrix screenMtx = length screenMtx
