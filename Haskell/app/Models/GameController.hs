@@ -58,9 +58,6 @@ pipeGroupHoleHeight = 10
 birdOriginX :: Int
 birdOriginX = 5
 
-birdHeight :: Bird -> Int
-birdHeight bird = length (lines (Bird.toString bird))
-
 data GameController = GameController
   {gameState :: GameState, terminal :: Terminal}
 
