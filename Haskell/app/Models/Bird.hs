@@ -25,6 +25,12 @@ getArea :: Bird -> Area
 getArea bird =
   Area.createFromString (originX bird) (originY bird) (toString bird)
 
+getOriginY :: Bird -> Int
+getOriginY = originY
+
+getHeight :: Bird -> Int
+getHeight bird = length (lines (toString bird))
+
 toString :: Bird -> String
 toString bird
   | verticalSpeed bird < 0 = "   . 7\n" ++ " // _/"

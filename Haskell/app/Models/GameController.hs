@@ -1,12 +1,19 @@
+{-# LANGUAGE BlockArguments #-}
+
 module Models.GameController where
 
 import Control.Concurrent (threadDelay)
+import Models.Area (Area (Area))
+import qualified Models.Area as Area
 import Models.Bird (Bird (Bird))
 import qualified Models.Bird as Bird
 import qualified Models.GameScreen as GameScreen
 import Models.GameState (GameState (GameState))
 import qualified Models.GameState as GameState
 import qualified Models.LocalStorage as LocalStorage
+import Models.Pipe (Pipe (Pipe))
+import qualified Models.Pipe as Pipe
+import Models.PipeGroup (PipeGroup)
 import qualified Models.PipeGroup as PipeGroup
 import Models.Terminal (Terminal (Terminal))
 import qualified Models.Terminal as Terminal
@@ -98,8 +105,10 @@ run controller elapsedTime = do
               then tick stateWithInput elapsedTime terminalWidth
               else stateWithInput
 
+      let tickedStateAfterCheck = checkCollision tickedStateWithInput terminalHeight
+
       Terminal.resetStylesAndCursor
-      GameScreen.render tickedStateWithInput
+      GameScreen.render tickedStateAfterCheck
 
       threadDelay delay
 
@@ -135,7 +144,7 @@ setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
 tick :: GameState -> Int -> Int -> GameState
 tick state elapsedTime width =
   tickScoreIfNecessary
-    (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime width) elapsedTime)
+    (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime) elapsedTime)
     elapsedTime
 
 tickBirdIfNecessary :: GameState -> Int -> GameState
@@ -157,23 +166,42 @@ tickScoreIfNecessary state elapsedTime =
     shouldAddScore = elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
     scoreIncrement = 1
 
-tickPipeGroupsIfNecessary :: GameState -> Int -> Int -> GameState
-tickPipeGroupsIfNecessary state elapsedTime width =
+tickPipeGroupsIfNecessary :: GameState -> Int -> GameState
+tickPipeGroupsIfNecessary state elapsedTime =
   if shouldTickPipe
-    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup) width)
+    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup))
     else state
-  where 
+  where
     shouldTickPipe = elapsedTime `mod` (microSecondsInASecond `div` pipeTickFPS) == 0
     pipeGroup = GameState.pipeGroups state
 
 tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
 tickAllPipeGroups pipeGroupList = [PipeGroup.tick pipeGroup | pipeGroup <- pipeGroupList]
 
-removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> Int -> [PipeGroup.PipeGroup]
-removePipeGroupIfNecessary [] width = []
-removePipeGroupIfNecessary (headPipeGroup:tailPipeGroup) width = if (PipeGroup.originX headPipeGroup) + width <= 0 then tailPipeGroup
-                                          else headPipeGroup:tailPipeGroup
+removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
+removePipeGroupIfNecessary pipeGroups =
+  if not (null pipeGroups) && PipeGroup.originX (head pipeGroups) + pipeWidth <= 0
+    then tail pipeGroups
+    else pipeGroups
 
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
   GameController newState (terminal controller)
+
+checkCollision :: GameState -> Int -> GameState
+checkCollision state terminalHeight =
+  if (Bird.getOriginY bird < 0 || Bird.getOriginY bird + Bird.getHeight bird >= terminalHeight) || isCollidingWithPipes state pipeGroups
+    then GameState.setScreenType state GameState.GAMEOVER
+    else state
+  where
+    bird = GameState.bird state
+    pipeGroups = GameState.pipeGroups state
+
+isCollidingWithPipes :: GameState -> [PipeGroup] -> Bool
+isCollidingWithPipes state [] = False
+isCollidingWithPipes state (headPipeGroup : tailPipeGroup) =
+  not (null tailPipeGroup)
+    && ( Area.overlapsWith (Bird.getArea bird) (PipeGroup.getArea headPipeGroup) || Area.overlapsWith (Bird.getArea bird) (PipeGroup.getArea (head tailPipeGroup))
+       )
+  where
+    bird = GameState.bird state
