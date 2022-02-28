@@ -144,7 +144,7 @@ setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
 tick :: GameState -> Int -> Int -> GameState
 tick state elapsedTime width =
   tickScoreIfNecessary
-    (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime width) elapsedTime)
+    (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime) elapsedTime)
     elapsedTime
 
 tickBirdIfNecessary :: GameState -> Int -> GameState
@@ -166,10 +166,10 @@ tickScoreIfNecessary state elapsedTime =
     shouldAddScore = elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
     scoreIncrement = 1
 
-tickPipeGroupsIfNecessary :: GameState -> Int -> Int -> GameState
-tickPipeGroupsIfNecessary state elapsedTime width =
+tickPipeGroupsIfNecessary :: GameState -> Int -> GameState
+tickPipeGroupsIfNecessary state elapsedTime =
   if shouldTickPipe
-    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup) width)
+    then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup))
     else state
   where
     shouldTickPipe = elapsedTime `mod` (microSecondsInASecond `div` pipeTickFPS) == 0
@@ -178,12 +178,11 @@ tickPipeGroupsIfNecessary state elapsedTime width =
 tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
 tickAllPipeGroups pipeGroupList = [PipeGroup.tick pipeGroup | pipeGroup <- pipeGroupList]
 
-removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> Int -> [PipeGroup.PipeGroup]
-removePipeGroupIfNecessary [] width = []
-removePipeGroupIfNecessary (headPipeGroup : tailPipeGroup) width =
-  if PipeGroup.originX headPipeGroup + width <= 0
-    then tailPipeGroup
-    else headPipeGroup : tailPipeGroup
+removePipeGroupIfNecessary :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
+removePipeGroupIfNecessary pipeGroups =
+  if not (null pipeGroups) && PipeGroup.originX (head pipeGroups) + pipeWidth <= 0
+    then tail pipeGroups
+    else pipeGroups
 
 setGameState :: GameController -> GameState -> GameController
 setGameState controller newState =
