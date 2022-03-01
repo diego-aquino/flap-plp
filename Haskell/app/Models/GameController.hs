@@ -61,6 +61,14 @@ birdOriginX = 5
 data GameController = GameController
   {gameState :: GameState, terminal :: Terminal}
 
+createNewGameState:: GameState.ScreenType -> IO GameState
+createNewGameState initialScreen = do
+  let bird = Bird birdOriginX initialBirdOriginY 0
+
+  highestScore <- LocalStorage.readHighScore
+
+  return (GameState bird [] 0 highestScore initialScreen)
+
 createGameController :: IO GameController
 createGameController = do
   terminal <- Terminal.createTerminal
@@ -68,9 +76,7 @@ createGameController = do
 
   let initialBirdOriginY = terminalHeight `div` 2 - 3
 
-  let bird = Bird birdOriginX initialBirdOriginY 0
-  highestScore <- LocalStorage.readHighScore
-  let gameState = GameState bird [] 0 highestScore GameState.PAUSED
+  gameState <- createNewGameState GameState.PAUSED
   let gameController = GameController gameState terminal
 
   return gameController
@@ -196,6 +202,19 @@ checkCollision state terminalHeight =
   where
     bird = GameState.bird state
     pipeGroups = GameState.pipeGroups state
+
+gameOver :: GameState -> IO(GameState)
+gameOver state = do
+  if (GameState.score state > GameState.highestScore state) then
+    LocalStorage.saveHighScore $ GameState.score state
+  else
+    return()
+
+  return (createNewGameState GameState.PLAYING)
+
+
+
+
 
 isCollidingWithPipes :: GameState -> [PipeGroup] -> Bool
 isCollidingWithPipes state [] = False
