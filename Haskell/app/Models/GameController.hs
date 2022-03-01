@@ -61,8 +61,10 @@ birdOriginX = 5
 data GameController = GameController
   {gameState :: GameState, terminal :: Terminal}
 
-createNewGameState:: GameState.ScreenType -> IO GameState
-createNewGameState initialScreen = do
+createInitialGameState :: GameState.ScreenType -> IO GameState
+createInitialGameState initialScreen = do
+  terminalHeight <- Terminal.getTerminalHeight
+  let initialBirdOriginY = terminalHeight `div` 2 - 3
   let bird = Bird birdOriginX initialBirdOriginY 0
 
   highestScore <- LocalStorage.readHighScore
@@ -72,14 +74,8 @@ createNewGameState initialScreen = do
 createGameController :: IO GameController
 createGameController = do
   terminal <- Terminal.createTerminal
-  terminalHeight <- Terminal.getTerminalHeight
-
-  let initialBirdOriginY = terminalHeight `div` 2 - 3
-
-  gameState <- createNewGameState GameState.PAUSED
-  let gameController = GameController gameState terminal
-
-  return gameController
+  gameState <- createInitialGameState GameState.PAUSED
+  return (GameController gameState terminal)
 
 initGameLoop :: IO ()
 initGameLoop = do
@@ -101,35 +97,36 @@ run controller elapsedTime = do
 
       let pipeGroupHeight = terminalHeight - pipeGroupOriginY - 2
       let pipeGroupOriginX = terminalWidth + 1
-      let setHoleOriginY = holeOriginY
 
-      let currentState = setPipeGroupToState (gameState controller) elapsedTime pipeGroupOriginX setHoleOriginY pipeGroupHeight
+      let currentState = setPipeGroupToState (gameState controller) elapsedTime pipeGroupOriginX holeOriginY pipeGroupHeight
 
-      let stateWithInput = handlePlayerInput currentState lastCharacter
-      let tickedStateWithInput =
-            if GameState.screenType (gameState controller) == GameState.PLAYING
-              then tick stateWithInput elapsedTime terminalWidth
-              else stateWithInput
+      stateWithInput <- handlePlayerInput currentState lastCharacter
+      let tickedStateWithInput = tick stateWithInput elapsedTime
 
       let tickedStateAfterCheck = checkCollision tickedStateWithInput terminalHeight
 
+      finalState <- saveHighestScoreIfNecessary tickedStateAfterCheck
+
       Terminal.resetStylesAndCursor
-      GameScreen.render tickedStateAfterCheck
+      GameScreen.render finalState
 
       threadDelay delay
 
-      run (setGameState controller tickedStateWithInput) (elapsedTime + delay)
+      run (setGameState controller finalState) (elapsedTime + delay)
   where
     delay = delayBetweenGameFrames
 
-handlePlayerInput :: GameState -> Maybe Char -> GameState
+handlePlayerInput :: GameState -> Maybe Char -> IO GameState
 handlePlayerInput state playerInput =
   if playerInput == Just '\n'
     then
       if GameState.screenType state == GameState.PLAYING
-        then GameState.jumpBird state (GameState.bird state)
-        else GameState.setScreenType state GameState.PLAYING
-    else state
+        then return (GameState.jumpBird state (GameState.bird state))
+        else
+          if GameState.screenType state == GameState.GAMEOVER
+            then createInitialGameState GameState.PLAYING
+            else return (GameState.setScreenType state GameState.PLAYING)
+    else return state
 
 genRandomPipeHeights :: Int -> Int -> IO Int
 genRandomPipeHeights x y = getStdRandom (randomR (x, y))
@@ -147,8 +144,8 @@ setPipeGroupToState state elapsedTime originX holeOriginY pipeGroupHeight =
     newPipeGroup = PipeGroup.create originX pipeGroupOriginY pipeWidth pipeGroupHeight holeOriginY pipeGroupHoleHeight
     newState = GameState.setPipeGroups state newPipeGroupList
 
-tick :: GameState -> Int -> Int -> GameState
-tick state elapsedTime width =
+tick :: GameState -> Int -> GameState
+tick state elapsedTime =
   tickScoreIfNecessary
     (tickBirdIfNecessary (tickPipeGroupsIfNecessary state elapsedTime) elapsedTime)
     elapsedTime
@@ -160,7 +157,8 @@ tickBirdIfNecessary state elapsedTime =
     else state
   where
     shouldTickBird =
-      elapsedTime `mod` (microSecondsInASecond `div` birdTickFPS) == 0
+      GameState.screenType state == GameState.PLAYING
+        && elapsedTime `mod` (microSecondsInASecond `div` birdTickFPS) == 0
     bird = GameState.bird state
 
 tickScoreIfNecessary :: GameState -> Int -> GameState
@@ -169,7 +167,9 @@ tickScoreIfNecessary state elapsedTime =
     then GameState.incrementScore state scoreIncrement
     else state
   where
-    shouldAddScore = elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
+    shouldAddScore =
+      GameState.screenType state == GameState.PLAYING
+        && elapsedTime `mod` (microSecondsInASecond `div` scoreTickFPS) == 0
     scoreIncrement = 1
 
 tickPipeGroupsIfNecessary :: GameState -> Int -> GameState
@@ -178,7 +178,9 @@ tickPipeGroupsIfNecessary state elapsedTime =
     then GameState.setPipeGroups state (removePipeGroupIfNecessary (tickAllPipeGroups pipeGroup))
     else state
   where
-    shouldTickPipe = elapsedTime `mod` (microSecondsInASecond `div` pipeTickFPS) == 0
+    shouldTickPipe =
+      GameState.screenType state == GameState.PLAYING
+        && elapsedTime `mod` (microSecondsInASecond `div` pipeTickFPS) == 0
     pipeGroup = GameState.pipeGroups state
 
 tickAllPipeGroups :: [PipeGroup.PipeGroup] -> [PipeGroup.PipeGroup]
@@ -196,31 +198,29 @@ setGameState controller newState =
 
 checkCollision :: GameState -> Int -> GameState
 checkCollision state terminalHeight =
-  if (Bird.getOriginY bird < 0 || Bird.getOriginY bird + Bird.getHeight bird >= terminalHeight) || isCollidingWithPipes state pipeGroups
+  if GameState.screenType state == GameState.PLAYING && isColliding
     then GameState.setScreenType state GameState.GAMEOVER
     else state
   where
+    isColliding =
+      (Bird.getOriginY bird < 0 || Bird.getOriginY bird + Bird.getHeight bird >= terminalHeight)
+        || isCollidingWithPipes state pipeGroups
     bird = GameState.bird state
     pipeGroups = GameState.pipeGroups state
 
-gameOver :: GameState -> IO(GameState)
-gameOver state = do
-  if (GameState.score state > GameState.highestScore state) then
-    LocalStorage.saveHighScore $ GameState.score state
-  else
-    return()
-
-  return (createNewGameState GameState.PLAYING)
-
-
-
-
+saveHighestScoreIfNecessary :: GameState -> IO GameState
+saveHighestScoreIfNecessary state = do
+  if GameState.screenType state == GameState.GAMEOVER
+    && GameState.score state > GameState.highestScore state
+    then do
+      LocalStorage.saveHighScore $ GameState.score state
+      return (GameState.setHighestScore state (GameState.score state))
+    else return state
 
 isCollidingWithPipes :: GameState -> [PipeGroup] -> Bool
 isCollidingWithPipes state [] = False
 isCollidingWithPipes state (headPipeGroup : tailPipeGroup) =
   not (null tailPipeGroup)
-    && ( Area.overlapsWith (Bird.getArea bird) (PipeGroup.getArea headPipeGroup) || Area.overlapsWith (Bird.getArea bird) (PipeGroup.getArea (head tailPipeGroup))
-       )
+    && (Area.overlapsWith (Bird.getArea bird) (PipeGroup.getArea headPipeGroup) || Area.overlapsWith (Bird.getArea bird) (PipeGroup.getArea (head tailPipeGroup)))
   where
     bird = GameState.bird state
