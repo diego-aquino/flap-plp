@@ -20,6 +20,7 @@ Para utilizar a versão funcional desse projeto, escrita em [Haskell](https://ww
 
    ```bash
    git clone https://github.com/diego-aquino/flap-plp.git
+   cd flap-plp/Haskell
    ```
 
 2. Configurar o Cabal e instalar as dependências
