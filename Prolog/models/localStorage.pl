@@ -7,6 +7,6 @@ saveHighestScore(Score):- open("score.txt",write,Stream),
          				  close(Stream).
 
 readHighestScore(Score):- (exists_file("Score.txt") ->  open("score.txt",read,HighestScore),
-			          	   							    read(HighestScore,Score),
-        			  	   							    close(HighestScore);
-        			  	   Score = 0). 
+			          		        read(HighestScore,Score),
+        			  	   	        close(HighestScore);
+        		   Score = 0). 
