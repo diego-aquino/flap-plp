@@ -31,5 +31,10 @@ parseStringLine(BaseX, BaseY, StringLine, Line):-
   EndX is OriginX + NumberOfValidCharacters - 1,
   line:create(OriginX, OriginY, EndX, Line).
 
+overlapsWith(Area, AnotherArea, Overlaps):-
+  occupiedLines(Area, AreaLines),
+  occupiedLines(AnotherArea, AnotherAreaLines),
+  (line:anyLinesOverlap(AreaLines, AnotherAreaLines) -> Overlaps = true; Overlaps = false).
+
 occupiedLines(Area, OccupiedLines):-
   Area = area(lines(OccupiedLines)).
