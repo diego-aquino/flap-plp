@@ -1,40 +1,55 @@
-:- module(controller,[initGameLoop/0]).
+:- module(controller, [initGameLoop/0]).
+
+:- use_module(gameScreen).
 :- use_module(terminal).
 :- use_module(bird).
-:- use_module("../utils/lists").
+:- use_module('../utils/lists').
 
-initGameLoop:- 
-    bird:testMethodBird("Ayo bird here"),nl,
-    lists:testMethodLists("Sup lists is ehre as well"),nl,
-    terminal:startPlayerInputThread,
-    run(0,0).
+exitKeyNumber(113). % Key: Q
+actionKeyNumber(13). % Key: Enter
 
+gameFPS(20).
+delayBetweenGameFrames(DelayInSeconds):-
+  gameFPS(GameFPS),
+  DelayInSeconds is 1 / GameFPS.
 
-checkShouldExitGame(113):- halt. %Stops program when 'q' is typed. Stops the program correctly, but causes some problems afterwards
-checkShouldExitGame(_).
+initGameLoop:-
+  terminal:startPlayerInputThread,
+  run(0, 0).
 
-processInput(CurrentState,13,StateWithInput):- StateWithInput is CurrentState + 1,!.
-processInput(CurrentState,_,CurrentState).
+% Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
+haltIfExitKeyWasTyped(KeyNumber):-
+  exitKeyNumber(KeyNumber),
+  halt,
+  !.
+haltIfExitKeyWasTyped(_).
 
-run(CurrentState,Time):- 
+processInput(CurrentState, KeyNumber, StateWithInput):-
+  actionKeyNumber(KeyNumber),
+  % Enter was pressed. Process input...
+  StateWithInput is CurrentState + 1,
+  !.
+processInput(_, _, _).
+
+run(CurrentState, Time):-
     terminal:fetchFromThread(Input),
-    checkShouldExitGame(Input),
-    %terminal:getTerminalHeight(Height), This methods are commented
-    %terminal:getTerminalWidth(Width),
-    
-    %Change pipes
-    
-    processInput(CurrentState,Input,StateWithInput),
+    haltIfExitKeyWasTyped(Input),
 
-    %Tick
+    % terminal:getTerminalHeight(Height), This methods are commented
+    % terminal:getTerminalWidth(Width),
 
-    %Check collisions
+    % Change pipes
 
-    %Save high score
+    processInput(CurrentState, Input, StateWithInput),
 
-    NextTime is Time + 1,
-    sleep(1),
-    Message = "Pressed Enter this amount: " + StateWithInput,
-    write(Message),nl,
-    ttyflush,
-    run(StateWithInput,NextTime).
+    % Tick
+    % Check collisions
+    % Save high score
+
+    terminal:resetCursor,
+    gameScreen:render,
+
+    delayBetweenGameFrames(DelayInSeconds),
+    sleep(DelayInSeconds),
+    NextTime is Time + DelayInSeconds,
+    run(StateWithInput, NextTime).
