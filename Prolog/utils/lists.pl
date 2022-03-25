@@ -1,3 +1,4 @@
-:- module(lists,[testMethodLists/1]).
+:- module(lists, [join/3]).
 
-testMethodLists(Param):- write(Param).
+join(List, Separator, JoinedList):-
+  atomic_list_concat(List, Separator, JoinedList).
