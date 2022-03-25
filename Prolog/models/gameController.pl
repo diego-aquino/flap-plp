@@ -26,10 +26,9 @@ haltIfExitKeyWasTyped(KeyNumber):-
   !.
 haltIfExitKeyWasTyped(_).
 
-processInput(CurrentState, KeyNumber, StateWithInput):-
+processInput(CurrentState, KeyNumber, CurrentState):-
   actionKeyNumber(KeyNumber),
   % Enter was pressed. Process input...
-  StateWithInput is CurrentState + 1,
   !.
 processInput(_, _, _).
 
