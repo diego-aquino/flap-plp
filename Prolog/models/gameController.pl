@@ -14,12 +14,14 @@ delayBetweenGameFrames(DelayInSeconds):-
   DelayInSeconds is 1 / GameFPS.
 
 initGameLoop:-
+  terminal:hideCursor,
   terminal:startPlayerInputThread,
   run(0, 0).
 
 % Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
 haltIfExitKeyWasTyped(KeyNumber):-
   exitKeyNumber(KeyNumber),
+  terminal:showCursor,
   halt,
   !.
 haltIfExitKeyWasTyped(_).
@@ -46,7 +48,7 @@ run(CurrentState, Time):-
     % Check collisions
     % Save high score
 
-    terminal:resetCursor,
+    terminal:moveCursorToOrigin,
     gameScreen:render,
 
     delayBetweenGameFrames(DelayInSeconds),
