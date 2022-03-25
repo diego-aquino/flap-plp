@@ -1,5 +1,6 @@
 :- module(terminal, [getWidth/1, getHeight/1, resetCursor/0, startPlayerInputThread/0, fetchFromThread/1]).
 
+getSize(Width, Height):- tty_size(Height, Width).
 getWidth(Width):- tty_size(_, Width).
 getHeight(Height):- tty_size(Height, _).
 
@@ -7,7 +8,7 @@ resetCursor():-
   tty_goto(0, 0).
 
 startPlayerInputThread:-
-thread_create(getPlayerInput, Id).
+  thread_create(getPlayerInput, _Id).
 
 getPlayerInput:-
   getKey(NewInput),
@@ -18,7 +19,10 @@ getKey(X):-
   ttyflush,
   get_single_char(X).
 
-handlePlayerInput(Input):- thread_send_message(main,Input).
+handlePlayerInput(Input):-
+  thread_send_message(main, Input).
 
-fetchFromThread(Resp):- thread_get_message(main,Resp,[timeout(0)]).
-fetchFromThread(Resp):- thread_get_message(main,Resp,[timeout(0)]); Resp = "Nothing".
+fetchFromThread(Input):-
+  thread_get_message(main, Input, [timeout(0)]),
+  !.
+fetchFromThread('').
