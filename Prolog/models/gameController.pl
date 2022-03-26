@@ -33,24 +33,24 @@ processInput(CurrentState, KeyNumber, CurrentState):-
 processInput(_, _, _).
 
 run(CurrentState, Time):-
-    terminal:fetchFromThread(Input),
-    haltIfExitKeyWasTyped(Input),
+  terminal:fetchFromThread(Input),
+  haltIfExitKeyWasTyped(Input),
 
-    % terminal:getTerminalHeight(Height), This methods are commented
-    % terminal:getTerminalWidth(Width),
+  % terminal:getTerminalHeight(Height), This methods are commented
+  % terminal:getTerminalWidth(Width),
 
-    % Change pipes
+  % Change pipes
 
-    processInput(CurrentState, Input, StateWithInput),
+  processInput(CurrentState, Input, StateWithInput),
 
-    % Tick
-    % Check collisions
-    % Save high score
+  % Tick
+  % Check collisions
+  % Save high score
 
-    terminal:moveCursorToOrigin,
-    gameScreen:render,
+  terminal:moveCursorToOrigin,
+  gameScreen:render,
 
-    delayBetweenGameFrames(DelayInSeconds),
-    sleep(DelayInSeconds),
-    NextTime is Time + DelayInSeconds,
-    run(StateWithInput, NextTime).
+  delayBetweenGameFrames(DelayInSeconds),
+  sleep(DelayInSeconds),
+  NextTime is Time + DelayInSeconds,
+  run(StateWithInput, NextTime).
