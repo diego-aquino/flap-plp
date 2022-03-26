@@ -10,6 +10,12 @@ createFromString(OriginX, OriginY, String, Area):-
   strings:lines(String, StringLines),
   parseStringLines(OriginX, OriginY, StringLines, OccupiedLines),
   createFromLines(OccupiedLines, Area).
+  
+merge(Area, AnotherArea, NewArea):-
+    occupiedLines(Area, OccupiedLinesFromArea),
+    occupiedLines(AnotherArea, OccupiedLinesFromAnotherArea),
+    append(OccupiedLinesFromArea, OccupiedLinesFromAnotherArea, OccupiedLines),
+    createFromLines(OccupiedLines, NewArea).
 
 parseStringLines(OriginX, OriginY, StringLines, Lines):-
   parseStringLinesRecursive(OriginX, OriginY, StringLines, 0, Lines).
