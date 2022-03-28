@@ -1,11 +1,11 @@
 :- module(controller,[initGameLoop/0]).
 :- use_module(terminal).
 :- use_module(bird).
-:- use_module("../utils/lists").
+:- use_module("../utils/list").
 
-initGameLoop:- 
+initGameLoop:-
     bird:testMethodBird("Ayo bird here"),nl,
-    lists:testMethodLists("Sup lists is ehre as well"),nl,
+    list:testMethodLists("Sup lists is ehre as well"),nl,
     terminal:startPlayerInputThread,
     run(0,0).
 
@@ -16,14 +16,14 @@ checkShouldExitGame(_).
 processInput(CurrentState,13,StateWithInput):- StateWithInput is CurrentState + 1,!.
 processInput(CurrentState,_,CurrentState).
 
-run(CurrentState,Time):- 
+run(CurrentState,Time):-
     terminal:fetchFromThread(Input),
     checkShouldExitGame(Input),
     %terminal:getTerminalHeight(Height), This methods are commented
     %terminal:getTerminalWidth(Width),
-    
+
     %Change pipes
-    
+
     processInput(CurrentState,Input,StateWithInput),
 
     %Tick
