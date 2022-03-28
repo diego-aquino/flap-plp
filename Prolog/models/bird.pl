@@ -1,4 +1,4 @@
-:- module(bird,[create/5]).
+:- module(bird,[create/4]).
 
 :- use_module(area).
 
