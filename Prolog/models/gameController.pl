@@ -1,40 +1,56 @@
-:- module(controller,[initGameLoop/0]).
+:- module(controller, [initGameLoop/0]).
+
+:- use_module(gameScreen).
 :- use_module(terminal).
 :- use_module(bird).
-:- use_module("../utils/list").
+:- use_module('../utils/list').
+
+exitKeyNumber(113). % Key: Q
+actionKeyNumber(13). % Key: Enter
+
+gameFPS(20).
+delayBetweenGameFrames(DelayInSeconds):-
+  gameFPS(GameFPS),
+  DelayInSeconds is 1 / GameFPS.
 
 initGameLoop:-
-    bird:testMethodBird("Ayo bird here"),nl,
-    list:testMethodLists("Sup lists is ehre as well"),nl,
-    terminal:startPlayerInputThread,
-    run(0,0).
+  terminal:hideCursor,
+  terminal:startPlayerInputThread,
+  run(0, 0).
 
+% Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
+haltIfExitKeyWasTyped(KeyNumber):-
+  exitKeyNumber(KeyNumber),
+  terminal:showCursor,
+  halt,
+  !.
+haltIfExitKeyWasTyped(_).
 
-checkShouldExitGame(113):- halt. %Stops program when 'q' is typed. Stops the program correctly, but causes some problems afterwards
-checkShouldExitGame(_).
+processInput(CurrentState, KeyNumber, CurrentState):-
+  actionKeyNumber(KeyNumber),
+  % Enter was pressed. Process input...
+  !.
+processInput(_, _, _).
 
-processInput(CurrentState,13,StateWithInput):- StateWithInput is CurrentState + 1,!.
-processInput(CurrentState,_,CurrentState).
+run(CurrentState, Time):-
+  terminal:fetchFromThread(Input),
+  haltIfExitKeyWasTyped(Input),
 
-run(CurrentState,Time):-
-    terminal:fetchFromThread(Input),
-    checkShouldExitGame(Input),
-    %terminal:getTerminalHeight(Height), This methods are commented
-    %terminal:getTerminalWidth(Width),
+  % terminal:getTerminalHeight(Height), This methods are commented
+  % terminal:getTerminalWidth(Width),
 
-    %Change pipes
+  % Change pipes
 
-    processInput(CurrentState,Input,StateWithInput),
+  processInput(CurrentState, Input, StateWithInput),
 
-    %Tick
+  % Tick
+  % Check collisions
+  % Save high score
 
-    %Check collisions
+  terminal:moveCursorToOrigin,
+  gameScreen:render,
 
-    %Save high score
-
-    NextTime is Time + 1,
-    sleep(1),
-    Message = "Pressed Enter this amount: " + StateWithInput,
-    write(Message),nl,
-    ttyflush,
-    run(StateWithInput,NextTime).
+  delayBetweenGameFrames(DelayInSeconds),
+  sleep(DelayInSeconds),
+  NextTime is Time + DelayInSeconds,
+  run(StateWithInput, NextTime).
