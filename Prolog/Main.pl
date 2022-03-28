@@ -1,3 +1,4 @@
-:- use_module("models/gameController").
+:- use_module('models/gameController').
 
-main:- gameController:initGameLoop.
+main:-
+  gameController:initGameLoop.

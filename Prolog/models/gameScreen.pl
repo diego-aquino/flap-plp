@@ -1,3 +1,40 @@
-:- module(gameScreen,[testMethodGameScreen/1]).
+:- module(gameScreen, [render/0]).
 
-testMethodGameScreen(Param):- write(Param).
+:- use_module(terminal).
+:- use_module('../utils/lists').
+:- use_module('../utils/strings').
+
+% In the future:
+% render(GameState):-
+render():-
+  renderPlayingScreen().
+
+renderPausedScreen().
+
+renderPlayingScreen():-
+  terminal:getSize(TerminalWidth, TerminalHeight),
+
+  ScreenMatrixWidth is TerminalWidth,
+  ScreenMatrixHeight is TerminalHeight - 1,
+  createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
+
+  printScreenMatrix(EmptyScreenMatrix).
+
+renderGameOverScreen().
+
+createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix):-
+  lists:createMatrix(ScreenMatrixWidth, ScreenMatrixHeight, " ", EmptyScreenMatrix).
+
+printScreenMatrix(ScreenMatrix):-
+  formatScreenMatrixToRender(ScreenMatrix, FormattedScreenMatrix),
+  write(FormattedScreenMatrix),
+  ttyflush.
+
+formatScreenMatrixToRender(ScreenMatrix, FormattedScreenMatrix):-
+  formatScreenMatrixRows(ScreenMatrix, FormattedRows),
+  strings:join(FormattedRows, '\n', FormattedScreenMatrix).
+
+formatScreenMatrixRows([], []).
+formatScreenMatrixRows([Row | TailRows], [FormattedRow | FormattedTailRows]):-
+  formatScreenMatrixRows(TailRows, FormattedTailRows),
+  strings:join(Row, '', FormattedRow).
