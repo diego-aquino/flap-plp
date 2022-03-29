@@ -18,7 +18,7 @@ tick(Bird, Gravity, NewBird) :-
   originX(Bird, OriginX),
   originY(Bird, OriginY),
   verticalSpeed(Bird, VerticalSpeed),
-  NewOriginY is OriginY + VerticalSpeed,
+  NewOriginY is OriginY + floor(VerticalSpeed),
   NewVerticalSpeed is VerticalSpeed + Gravity,
   NewBird = bird(originX(OriginX), originY(NewOriginY), verticalSpeed(NewVerticalSpeed)).
 
