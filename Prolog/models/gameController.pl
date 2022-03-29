@@ -48,7 +48,9 @@ run(CurrentState, Time):-
   % Save high score
 
   terminal:moveCursorToOrigin,
-  gameScreen:render,
+
+  bird:create(4, 5, 0, Bird), % static for now
+  gameScreen:render(Bird),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
