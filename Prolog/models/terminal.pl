@@ -31,18 +31,18 @@ startPlayerInputThread:-
   thread_create(getPlayerInput, _Id).
 
 getPlayerInput:-
-  getKey(NewInput),
-  handlePlayerInput(NewInput),
+  getKey(CharCode),
+  handlePlayerInput(CharCode),
   getPlayerInput.
 
 getKey(X):-
   ttyflush,
   get_single_char(X).
 
-handlePlayerInput(Input):-
-  thread_send_message(main, Input).
+handlePlayerInput(CharCode):-
+  thread_send_message(main, CharCode).
 
-fetchFromThread(Input):-
-  thread_get_message(main, Input, [timeout(0)]),
+fetchFromThread(CharCode):-
+  thread_get_message(main, CharCode, [timeout(0)]),
   !.
 fetchFromThread('').

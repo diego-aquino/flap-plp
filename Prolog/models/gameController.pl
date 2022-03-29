@@ -5,8 +5,8 @@
 :- use_module(bird).
 :- use_module('../utils/list').
 
-exitKeyNumber(113). % Key: Q
-actionKeyNumber(13). % Key: Enter
+exitKeyNumber(113). % Char code for "Q"
+actionKeyNumber(13). % Char code for "Enter"
 
 gameFPS(20).
 delayBetweenGameFrames(DelayInSeconds):-
@@ -14,6 +14,7 @@ delayBetweenGameFrames(DelayInSeconds):-
   DelayInSeconds is 1 / GameFPS.
 
 birdTickFPS(20).
+birdJumpVerticalSpeed(-1.4).
 
 gravity(0.2).
 
@@ -24,29 +25,30 @@ initGameLoop:-
   run(Bird, 0).
 
 % Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
-haltIfExitKeyWasTyped(KeyNumber):-
-  exitKeyNumber(KeyNumber),
+haltIfExitKeyWasTyped(CharCode):-
+  exitKeyNumber(CharCode),
   terminal:showCursor,
   halt,
   !.
 haltIfExitKeyWasTyped(_).
 
-processInput(Bird, KeyNumber, Bird):-
-  actionKeyNumber(KeyNumber),
-  % Enter was pressed. Process input...
+processInput(Bird, CharCode, BirdWithInput):-
+  actionKeyNumber(CharCode),
+  birdJumpVerticalSpeed(BirdJumpVerticalSpeed),
+  bird:jump(Bird, BirdJumpVerticalSpeed, BirdWithInput),
   !.
 processInput(Bird, _, Bird).
 
 run(Bird, ElapsedTime):-
-  terminal:fetchFromThread(Input),
-  haltIfExitKeyWasTyped(Input),
+  terminal:fetchFromThread(CharCode),
+  haltIfExitKeyWasTyped(CharCode),
 
   % terminal:getTerminalHeight(Height), This methods are commented
   % terminal:getTerminalWidth(Width),
 
   % Change pipes
 
-  processInput(Bird, Input, BirdWithInput),
+  processInput(Bird, CharCode, BirdWithInput),
   tick(BirdWithInput, ElapsedTime, TickedBird), % tick(State, ElapsedTime, TickedState)
 
   % Tick

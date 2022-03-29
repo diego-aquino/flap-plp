@@ -1,4 +1,4 @@
-:- module(bird,[create/4]).
+:- module(bird,[create/4, jump/3]).
 
 :- use_module(area).
 
@@ -21,6 +21,11 @@ tick(Bird, Gravity, NewBird) :-
   NewOriginY is OriginY + floor(VerticalSpeed),
   NewVerticalSpeed is VerticalSpeed + Gravity,
   NewBird = bird(originX(OriginX), originY(NewOriginY), verticalSpeed(NewVerticalSpeed)).
+
+jump(Bird, NewVerticalSpeed, JumpedBird):-
+  originX(Bird, OriginX),
+  originY(Bird, OriginY),
+  create(OriginX, OriginY, NewVerticalSpeed, JumpedBird).
 
 getArea(Bird, Area):-
   toString(String),
