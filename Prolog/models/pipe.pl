@@ -43,13 +43,13 @@ toString(Pipe, String):-
 
 toDownString(Pipe, ToDownString):-
 	toUpString(Pipe,ToUpStringPipe),
-	list:join(List, nl, toUpStringPipe),
+	list:join(List, nl, ToUpStringPipe),
 	reverse(List, ReversedList),
 	list:join(ReversedList, nl, ToDownString).
 
 toUpString(Pipe, toUpString):-
 	toStringLines(Pipe,StringLines),
-	list:join(StringLines, nl, toUpString).
+	list:join(StringLines, nl, ToUpString).
 
 toStringLines(Pipe, StringLines):-
 	width(Pipe, Width),
