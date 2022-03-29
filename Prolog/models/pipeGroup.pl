@@ -35,7 +35,7 @@ tick(PipeGroup, NewPipeGroup):-
 	topPipe(PipeGroup, TopPipe),
 	bottomPipe(PipeGroup, BottomPipe),
 	width(PipeGroup, Width),
-	holeHeight(PipeGroup, HoleHeight)
+	holeHeight(PipeGroup, HoleHeight),
     pipe:tick(TopPipe,NewTopPipe),
     pipe:tick(BottomPipe,NewBottomPipe),
     pipe:originX(NewTopPipe,NewOriginX),
