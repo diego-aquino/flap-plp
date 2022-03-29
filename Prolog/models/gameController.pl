@@ -13,10 +13,15 @@ delayBetweenGameFrames(DelayInSeconds):-
   gameFPS(GameFPS),
   DelayInSeconds is 1 / GameFPS.
 
+birdTickFPS(20).
+
+gravity(0.2).
+
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
-  run(0, 0).
+  bird:create(4, 5, 0, Bird),
+  run(Bird, 0).
 
 % Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
 haltIfExitKeyWasTyped(KeyNumber):-
@@ -26,13 +31,13 @@ haltIfExitKeyWasTyped(KeyNumber):-
   !.
 haltIfExitKeyWasTyped(_).
 
-processInput(CurrentState, KeyNumber, CurrentState):-
+processInput(Bird, KeyNumber, Bird):-
   actionKeyNumber(KeyNumber),
   % Enter was pressed. Process input...
   !.
-processInput(_, _, _).
+processInput(Bird, _, Bird).
 
-run(CurrentState, Time):-
+run(Bird, ElapsedTime):-
   terminal:fetchFromThread(Input),
   haltIfExitKeyWasTyped(Input),
 
@@ -41,18 +46,29 @@ run(CurrentState, Time):-
 
   % Change pipes
 
-  processInput(CurrentState, Input, StateWithInput),
+  processInput(Bird, Input, BirdWithInput),
+  tick(BirdWithInput, ElapsedTime, TickedBird), % tick(State, ElapsedTime, TickedState)
 
   % Tick
   % Check collisions
   % Save high score
 
   terminal:moveCursorToOrigin,
-
-  bird:create(4, 5, 0, Bird), % static for now
-  gameScreen:render(Bird),
+  gameScreen:render(TickedBird),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
-  NextTime is Time + DelayInSeconds,
-  run(StateWithInput, NextTime).
+  NextElapsedTime is ElapsedTime + DelayInSeconds,
+  run(TickedBird, NextElapsedTime).
+
+tick(Bird, ElapsedTime, TickedBird):-
+  tickBirdIfNecessary(Bird, ElapsedTime, TickedBird).
+
+tickBirdIfNecessary(Bird, ElapsedTime, TickedBird):-
+  birdTickFPS(BirdTickFPS),
+  NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
+  0 is (NumberOfBirdFrames mod 1),
+  gravity(Gravity),
+  bird:tick(Bird, Gravity, TickedBird),
+  !.
+tickBirdIfNecessary(Bird, _, Bird).
