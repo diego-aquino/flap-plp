@@ -6,9 +6,8 @@
 
 create(OriginX, OriginY, TopPipe, BottomPipe, Width, Height, HoleOriginY, HoleHeight, PipeGroup):-
 	TopPipeHeight is HoleOriginY - OriginY,
-	TopPipeHeight is HoleOriginY - OriginY,
 	BottomPipeHeight is Height - TopPipeHeight - HoleHeight,
-	BottomPipeOriginY is originY + TopPipeHeight + HoleHeight,
+	BottomPipeOriginY is OriginY + TopPipeHeight + HoleHeight,
 	pipe:create(OriginX, OriginY, Width, TopPipeHeight, "DOWN", TopPipe),
 	pipe:create(OriginX, BottomPipeOriginY, Width, BottomPipeHeight, "UP", BottomPipe),
 	PipeGroup = pipeGroup(originX(OriginX) , originY(OriginY), topPipe(TopPipe), bottomPipe(BottomPipe), width(Width), holeHeight(HoleHeight)).
@@ -36,10 +35,10 @@ tick(PipeGroup, NewPipeGroup):-
 	bottomPipe(PipeGroup, BottomPipe),
 	width(PipeGroup, Width),
 	holeHeight(PipeGroup, HoleHeight),
-    pipe:tick(TopPipe,NewTopPipe),
-    pipe:tick(BottomPipe,NewBottomPipe),
-    pipe:originX(NewTopPipe,NewOriginX),
-    pipe:originY(NewTopPipe, NewOriginY),
+  pipe:tick(TopPipe,NewTopPipe),
+  pipe:tick(BottomPipe,NewBottomPipe),
+  pipe:originX(NewTopPipe,NewOriginX),
+  pipe:originY(NewTopPipe, NewOriginY),
 	NewPipeGroup = pipeGroup(originX(NewOriginX), originY(NewOriginY), topPipe(NewTopPipe), bottomPipe(NewBottomPipe), width(Width), holeHeight(HoleHeight)).
 
 getArea(PipeGroup, Area):-
@@ -57,6 +56,7 @@ toString(PipeGroup, String):-
 	pipe:toString(TopPipe, TopPipeAsString),
 	pipe:toString(BottomPipe, BottomPipeAsString),
 	list:createList(Width, " ", HoleLine),
-	list:createList(HoleHeight, HoleLine, HoleList),
+  list:join(HoleLine, "", HoleLineAsString),
+	list:createList(HoleHeight, HoleLineAsString, HoleList),
 	list:join(HoleList, nl, Hole),
 	list:join([TopPipeAsString, Hole, BottomPipeAsString], nl, String).
