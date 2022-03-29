@@ -1,4 +1,4 @@
-:- module(strings, [lines/2, size/2, removeLeadingSpaces/2]).
+:- module(strings, [lines/2, size/2, chartAt/3, removeLeadingSpaces/2]).
 
 :- use_module(list).
 
@@ -12,8 +12,10 @@ characters(String, StringCharacters):-
   atom_chars(String, StringCharacters).
 
 size(String, StringSize):-
-  characters(String, StringCharacters),
-  length(StringCharacters, StringSize).
+  string_length(String, StringSize).
+
+chartAt(String, Index, Char):-
+  sub_string(String, Index, 1, _, Char).
 
 removeLeadingSpaces(String, StringWithoutLeadingSpaces):-
   characters(String, Characters),

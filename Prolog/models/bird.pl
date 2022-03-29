@@ -29,4 +29,4 @@ getArea(Bird, Area):-
   area:createFromString(OriginX, OriginY, String, Area).
 
 toString(String):-
-  String = "== (.\n \\___\\".
+  String = "== (.\n \\\\___\\\\".
