@@ -3,7 +3,7 @@
 :- use_module(gameScreen).
 :- use_module(terminal).
 :- use_module(bird).
-:- use_module('../utils/lists').
+:- use_module('../utils/list').
 
 exitKeyNumber(113). % Key: Q
 actionKeyNumber(13). % Key: Enter

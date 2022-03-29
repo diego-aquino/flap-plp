@@ -1,7 +1,7 @@
 :- module(gameScreen, [render/0]).
 
 :- use_module(terminal).
-:- use_module('../utils/lists').
+:- use_module('../utils/list').
 :- use_module('../utils/strings').
 
 % In the future:
@@ -23,7 +23,7 @@ renderPlayingScreen():-
 renderGameOverScreen().
 
 createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix):-
-  lists:createMatrix(ScreenMatrixWidth, ScreenMatrixHeight, " ", EmptyScreenMatrix).
+  list:createMatrix(ScreenMatrixWidth, ScreenMatrixHeight, " ", EmptyScreenMatrix).
 
 printScreenMatrix(ScreenMatrix):-
   formatScreenMatrixToRender(ScreenMatrix, FormattedScreenMatrix),

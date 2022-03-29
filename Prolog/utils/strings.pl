@@ -1,6 +1,6 @@
 :- module(strings, [lines/2, size/2, removeLeadingSpaces/2]).
 
-:- use_module(lists).
+:- use_module(list).
 
 split(String, Separator, StringParts):-
   split_string(String, Separator, '', StringParts).
@@ -21,7 +21,7 @@ removeLeadingSpaces(String, StringWithoutLeadingSpaces):-
     Characters,
     CharactersExcludingLeadingSpaces
   ),
-  lists:join(CharactersExcludingLeadingSpaces, '', StringWithoutLeadingSpaces).
+  list:join(CharactersExcludingLeadingSpaces, '', StringWithoutLeadingSpaces).
 
 removeLeadingSpacesFromCharacterList([], []).
 removeLeadingSpacesFromCharacterList(
