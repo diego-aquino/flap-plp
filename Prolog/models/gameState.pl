@@ -1,5 +1,6 @@
 :- module(gameState,
-          [ create/6
+          [ create/6,
+            incrementScore/3
           ]).
 
 playingScreenType('playing-screen').
@@ -17,6 +18,10 @@ pipeGroups(GameState, PipeGroups) :-
 
 score(GameState, Score) :-
     GameState=gameState(bird(_), pipeGroups(_), score(Score), highestScore(_), screenType(_)).
+
+incrementScore(GameState, Score, Increment) :-
+    NewScore is Score+Increment,
+    GameState=gameState(bird(_), pipeGroups(_), score(NewScore), highestScore(_), screenType(_)).
 
 highestScore(GameState, HighestScore) :-
     GameState=gameState(bird(_), pipeGroups(_), score(_), highestScore(HighestScore), screenType(_)).
