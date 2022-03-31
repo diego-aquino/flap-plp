@@ -61,6 +61,8 @@ Para utilizar a versão funcional desse projeto, escrita em [Prolog](https://www
 
 ## Executando localmente
 
+É necessário ter um ambiente **Unix** para executar o projeto funcional, pois algumas funcionalidades avançadas do terminal não estão disponíveis em Prolog para Windows.
+
 1. Clonar repositório
 
    ```bash
@@ -70,8 +72,9 @@ Para utilizar a versão funcional desse projeto, escrita em [Prolog](https://www
 
 2. Executar o projeto
 
-   - Unix: `swipl -q -f Main.pl`
-   - Windows: clique duas vezes para abrir o arquivo Main.pl.
+   ```bash
+   swipl -q -f Main.pl
+   ```
 
    Depois de entrar no prompt interativo, chame a regra `main`:
 
@@ -79,7 +82,7 @@ Para utilizar a versão funcional desse projeto, escrita em [Prolog](https://www
    ?- main.
    ```
 
-Para uma melhor experiência, recomenda-se ajustar o tamanho do terminal para as seguintes dimensões>
+Para uma melhor experiência, recomenda-se ajustar o tamanho do terminal para as seguintes dimensões:
 
 - Altura: ~30 caracteres
 - Largura: ~130 caracteres
