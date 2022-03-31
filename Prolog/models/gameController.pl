@@ -85,8 +85,9 @@ run(GameState, ElapsedTime):-
   PipeGroupHeight is Height - PipeGroupOriginY - 2,
   PipeGroupOriginX is Width + 1, 
 
+  setPipeGroupToState(GameState, ElapsedTime, PipeGroupOriginX, HoleOriginY, PipeGroupHeight, NewGameState),
 
-  processInput(GameState, CharCode, GameStateWithInput),
+  processInput(NewGameState, CharCode, GameStateWithInput),
   tick(GameStateWithInput, ElapsedTime, TickedGameStateWithInput),
 
   % Tick
