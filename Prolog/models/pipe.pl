@@ -43,16 +43,17 @@ toString(Pipe, String):-
 
 toDownString(Pipe, ToDownString):-
 	toUpString(Pipe,ToUpStringPipe),
-	list:join(List, nl, ToUpStringPipe),
+	list:join(List, '\n', ToUpStringPipe),
 	reverse(List, ReversedList),
-	list:join(ReversedList, nl, ToDownString).
+	list:join(ReversedList, '\n', ToDownString).
 
 toUpString(Pipe, ToUpString):-
 	toStringLines(Pipe,StringLines),
-	list:join(StringLines, nl, ToUpString).
+	list:join(StringLines, '\n', ToUpString).
 
 toStringLines(Pipe, StringLines):-
 	width(Pipe, Width),
 	height(Pipe, Height),
-	list:createList(Width, '#', Line),
-	list:createList(Height, Line, StringLines).
+	list:createList(Width, '#', LineAsList),
+	list:join(LineAsList, '', LineAsString),
+	list:createList(Height, LineAsString, StringLines).
