@@ -2,6 +2,9 @@
 
 :- use_module(terminal).
 :- use_module(bird).
+
+:- use_module(pipeGroup).
+
 :- use_module(gameState).
 :- use_module('../utils/list').
 :- use_module('../utils/strings').
@@ -31,16 +34,16 @@ renderScreen('game-over-screen',GameState):-
   ScreenMatrixHeight is TerminalHeight - 1,
   createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
 
+
   gameState:highestScore(GameState,HighestScore),
   string_concat("High Score: ", HighestScore, LastTextLine),
   
   renderTextToScreenMatrix(["Game Over", "Press <Enter> to play again", LastTextLine],EmptyScreenMatrix,ScreenMatrixWithText),
   
   printScreenMatrix(ScreenMatrixWithText).
-
+  
 renderScreen('playing-screen',GameState):-
   terminal:getSize(TerminalWidth, TerminalHeight),
-
   ScreenMatrixWidth is TerminalWidth,
   ScreenMatrixHeight is TerminalHeight - 1,
   createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
@@ -48,8 +51,12 @@ renderScreen('playing-screen',GameState):-
   gameState:bird(GameState,Bird),
   renderBirdToScreenMatrix(Bird, EmptyScreenMatrix, ScreenMatrixWithBird),
   
+  gameState:pipeGroups(GameState, PipeGroups),
+  renderPipeGroupsToScreenMatrix(PipeGroups, ScreenMatrixWithBird, ScreenMatrixWithPipeGroups),
+  
   gameState:score(GameState,Score),
-  renderScoreToScreenMatrix(Score,ScreenMatrixWithBird,ScreenMatrixWithScore),
+  renderScoreToScreenMatrix(Score,ScreenMatrixWithPipeGroups,ScreenMatrixWithScore),
+  
   printScreenMatrix(ScreenMatrixWithScore).
 
 renderScoreToScreenMatrix(Score,ScreenMatrix,ScreenMatrixWithScore):-
@@ -89,6 +96,15 @@ renderTextToScreenMatrixRecursive(TextLine,Spacing,EmptyScreenMatrix,ScreenMatri
   OriginX is (Width - TextLength) // 2,
   OriginY is (Height // 2) - Spacing,
   renderObject(OriginX,OriginY,TextLine,EmptyScreenMatrix,ScreenMatrixWithText).
+
+renderPipeGroupsToScreenMatrix([], ScreenMatrix, ScreenMatrix).
+renderPipeGroupsToScreenMatrix([PipeGroup | TailPipeGroups], ScreenMatrix, ScreenMatrixWithPipeGroups):-
+  renderPipeGroupsToScreenMatrix(TailPipeGroups, ScreenMatrix, TailRenderedScreenMatrix),
+  pipeGroup:originX(PipeGroup, OriginX),
+  pipeGroup:originY(PipeGroup, OriginY),
+  pipeGroup:toString(PipeGroup, PipeGroupString),
+  renderObject(OriginX, OriginY, PipeGroupString, TailRenderedScreenMatrix, ScreenMatrixWithPipeGroups).
+
 
 renderObject(OriginX, OriginY, ObjectString, ScreenMatrix, RenderedScreenMatrix):-
   widthScreenMatrix(ScreenMatrix, WidthScreenMatrix),
