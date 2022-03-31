@@ -5,6 +5,7 @@
 :- use_module(terminal).
 :- use_module(bird).
 :- use_module(pipeGroup).
+:- use_module(pipe).
 :- use_module('../utils/list').
 
 exitKeyNumber(113). % Char code for "Q"
@@ -19,6 +20,10 @@ delayBetweenGameFrames(DelayInSeconds):-
 birdTickFPS(20).
 birdJumpVerticalSpeed(-1.4).
 
+pipeWidth(5).
+pipeGroupOriginY(0).
+pipeGroupHoleHeight(10).
+
 gravity(0.2).
 
 msInASecond(1000000).
@@ -32,10 +37,23 @@ timeBetweenPipeCreations(2000000).
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
-  bird:create(4, 5, 0, Bird),
-  run(Bird, 0).
 
-% Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
+  bird:create(4, 5, 0, Bird),
+
+  pipeWidth(PipeWidth),
+  pipeGroupOriginY(PipeGroupOriginY),
+  pipeGroupHoleHeight(PipeGroupHoleHeight),
+  pipeGroup:create(20, PipeGroupOriginY, PipeWidth, 21, 5, PipeGroupHoleHeight, PipeGroup1),
+  PipeGroups = [PipeGroup1 | []],
+
+  InitialScore = 0,
+  HighestScore = 0, % temporarily hardcoded 0
+
+  gameState:playingScreenType(PlayingScreenType),
+
+  gameState:create(Bird, PipeGroups, InitialScore, HighestScore, PlayingScreenType, InitialGameState),
+  run(InitialGameState, 0).
+
 haltIfExitKeyWasTyped(CharCode):-
   exitKeyNumber(CharCode),
   terminal:showCursor,
@@ -43,14 +61,16 @@ haltIfExitKeyWasTyped(CharCode):-
   !.
 haltIfExitKeyWasTyped(_).
 
-processInput(Bird, CharCode, BirdWithInput):-
+processInput(GameState, CharCode, GameStateWithInput):-
   actionKeyNumber(CharCode),
   birdJumpVerticalSpeed(BirdJumpVerticalSpeed),
-  bird:jump(Bird, BirdJumpVerticalSpeed, BirdWithInput),
+  gameState:bird(GameState, Bird),
+  bird:jump(Bird, BirdJumpVerticalSpeed, JumpedBird),
+  gameState:setBird(GameState, JumpedBird, GameStateWithInput),
   !.
-processInput(Bird, _, Bird).
+processInput(GameState, _, GameState).
 
-run(Bird, ElapsedTime):-
+run(GameState, ElapsedTime):-
   terminal:fetchFromThread(CharCode),
   haltIfExitKeyWasTyped(CharCode),
 
@@ -66,20 +86,20 @@ run(Bird, ElapsedTime):-
   PipeGroupOriginX is Width + 1, 
 
 
-  processInput(Bird, CharCode, BirdWithInput),
-  tick(BirdWithInput, ElapsedTime, TickedBird), % tick(State, ElapsedTime, TickedState)
+  processInput(GameState, CharCode, GameStateWithInput),
+  tick(GameStateWithInput, ElapsedTime, TickedGameStateWithInput),
 
   % Tick
   % Check collisions
   % Save high score
 
   terminal:moveCursorToOrigin,
-  gameScreen:render(TickedBird),
+  gameScreen:render(TickedGameStateWithInput),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
   NextElapsedTime is ElapsedTime + DelayInSeconds,
-  run(TickedBird, NextElapsedTime).
+  run(TickedGameStateWithInput, NextElapsedTime).
 
 shouldCreatePipeGroup(ScreenType, ElapsedTime, Time):- 
   ScreenType = 'playing-screen', 
@@ -106,8 +126,10 @@ setPipeGroupToState(GameState, ElapsedTime, OriginX, HoleOriginY, PipeGroupHeigh
   (shouldCreatePipeGroup(ScreenType, ElapsedTime, Time) -> gameState:setPipeGroups(GameState, NewPipeGroupList, NewGameState);
   NewGameState = GameState).
 
-tick(Bird, ElapsedTime, TickedBird):-
-  tickBirdIfNecessary(Bird, ElapsedTime, TickedBird).
+tick(GameState, ElapsedTime, TickedGameState):-
+  gameState:bird(GameState, Bird),
+  tickBirdIfNecessary(Bird, ElapsedTime, TickedBird),
+  gameState:setBird(GameState, TickedBird, TickedGameState).
 
 tickBirdIfNecessary(Bird, ElapsedTime, TickedBird):-
   birdTickFPS(BirdTickFPS),
@@ -146,4 +168,3 @@ removePipeGroupsIfNecessary([Head|Tail], NewPipeGroupList):-
   NewPipeGroupList = [Head|Tail]).
   
       
-

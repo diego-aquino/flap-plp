@@ -2,26 +2,32 @@
 
 :- use_module(terminal).
 :- use_module(bird).
+:- use_module(pipeGroup).
+:- use_module(gameState).
 :- use_module('../utils/list').
 :- use_module('../utils/strings').
 
 % In the future:
 % render(GameState):-
-render(Bird):-
-  renderPlayingScreen(Bird).
+render(GameState):-
+  renderPlayingScreen(GameState).
 
 renderPausedScreen().
 
-renderPlayingScreen(Bird):-
+renderPlayingScreen(GameState):-
   terminal:getSize(TerminalWidth, TerminalHeight),
 
   ScreenMatrixWidth is TerminalWidth,
   ScreenMatrixHeight is TerminalHeight - 1,
   createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
 
-  renderBirdToScreenMatrix(Bird, EmptyScreenMatrix, ScreenMatrixWithBird),
+  gameState:bird(GameState, Bird),
+  gameState:pipeGroups(GameState, PipeGroups),
 
-  printScreenMatrix(ScreenMatrixWithBird).
+  renderBirdToScreenMatrix(Bird, EmptyScreenMatrix, ScreenMatrixWithBird),
+  renderPipeGroupsToScreenMatrix(PipeGroups, ScreenMatrixWithBird, ScreenMatrixWithBirdAndPipeGroups),
+
+  printScreenMatrix(ScreenMatrixWithBirdAndPipeGroups).
 
 renderGameOverScreen().
 
@@ -33,6 +39,14 @@ renderBirdToScreenMatrix(Bird, ScreenMatrix, ScreenMatrixWithBird):-
   bird:originY(Bird, OriginY),
   bird:toString(Bird, BirdAsString),
   renderObject(OriginX, OriginY, BirdAsString, ScreenMatrix, ScreenMatrixWithBird).
+
+renderPipeGroupsToScreenMatrix([], ScreenMatrix, ScreenMatrix).
+renderPipeGroupsToScreenMatrix([PipeGroup | TailPipeGroups], ScreenMatrix, ScreenMatrixWithPipeGroups):-
+  renderPipeGroupsToScreenMatrix(TailPipeGroups, ScreenMatrix, TailRenderedScreenMatrix),
+  pipeGroup:originX(PipeGroup, OriginX),
+  pipeGroup:originY(PipeGroup, OriginY),
+  pipeGroup:toString(PipeGroup, PipeGroupString),
+  renderObject(OriginX, OriginY, PipeGroupString, TailRenderedScreenMatrix, ScreenMatrixWithPipeGroups).
 
 renderObject(OriginX, OriginY, ObjectString, ScreenMatrix, RenderedScreenMatrix):-
   widthScreenMatrix(ScreenMatrix, WidthScreenMatrix),
