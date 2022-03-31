@@ -37,7 +37,7 @@ initGameLoop:-
 
   gameState:create(Bird, [], InitialScore, HighestScore, PlayingScreenType, InitialGameState),
 
-  run(InitialGameState, 0).
+  run(InitialGameState, 10).
 
 haltIfExitKeyWasTyped(CharCode):-
   exitKeyNumber(CharCode),
@@ -127,7 +127,7 @@ shouldTickBird(ScreenType, ElapsedTime):-
   birdTickFPS(BirdTickFPS),
   gameState:playingScreenType(ScreenType),
   NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
-  0 is NumberOfBirdFrames mod 1.
+  0 is (NumberOfBirdFrames mod 1).
 
 tickBirdIfNecessary(Bird, ScreenType, ElapsedTime, TickedBird):-
   shouldTickBird(ScreenType, ElapsedTime),
@@ -140,7 +140,7 @@ shouldTickPipeGroups(ScreenType, ElapsedTime):-
   pipeTickFPS(PipeTickFPS),
   gameState:playingScreenType(ScreenType),
   NumberOfPipeFrames is floor(ElapsedTime * PipeTickFPS),
-  0 is NumberOfPipeFrames mod 1.
+  0 is (NumberOfPipeFrames mod 1).
 
 tickPipeGroupsIfNecessary(PipeGroups, ScreenType, ElapsedTime, NewPipeGroups):-
   shouldTickPipeGroups(ScreenType, ElapsedTime),
