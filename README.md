@@ -7,7 +7,7 @@
   - [Instalação](#instalação)
     - [Requisitos](#requisitos)
   - [Executando localmente](#executando-localmente)
-- [Projeto funcional (Prolog)](#projeto-funcional-prolog)
+- [Projeto lógico (Prolog)](#projeto-lógico-prolog)
   - [Instalação](#instalação-1)
     - [Requisitos](#requisitos-1)
   - [Executando localmente](#executando-localmente-1)
@@ -48,7 +48,7 @@ Para utilizar a versão funcional desse projeto, escrita em [Haskell](https://ww
    cabal run
    ```
 
-# Projeto funcional (Prolog)
+# Projeto lógico (Prolog)
 
 ## Instalação
 
