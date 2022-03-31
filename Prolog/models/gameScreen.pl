@@ -24,8 +24,8 @@ renderPlayingScreen(GameState):-
   gameState:bird(GameState, Bird),
   gameState:pipeGroups(GameState, PipeGroups),
 
-  renderBirdToScreenMatrix(Bird, EmptyScreenMatrix, ScreenMatrixWithBird),
-  renderPipeGroupsToScreenMatrix(PipeGroups, ScreenMatrixWithBird, ScreenMatrixWithBirdAndPipeGroups),
+  renderPipeGroupsToScreenMatrix(PipeGroups, EmptyScreenMatrix, ScreenMatrixWithPipeGroups),
+  renderBirdToScreenMatrix(Bird, ScreenMatrixWithPipeGroups, ScreenMatrixWithBirdAndPipeGroups),
 
   printScreenMatrix(ScreenMatrixWithBirdAndPipeGroups).
 

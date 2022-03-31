@@ -1,4 +1,4 @@
-:- module(pipe,[create/6]).
+:- module(pipe, [create/6, tick/2]).
 
 :- use_module(area).
 :- use_module('../utils/list').
@@ -21,14 +21,14 @@ height(Pipe, Height):-
 direction(Pipe, Direction):-
 	Pipe = pipe(originX(_), originY(_), width(_), height(_), direction(Direction)).
 
-tick(Pipe, NewPipe):-
+tick(Pipe, TickedPipe):-
 	originX(Pipe, OriginX),
 	originY(Pipe, OriginY),
 	width(Pipe, Width),
 	height(Pipe, Height),
 	direction(Pipe, Direction),
 	NewOriginX is OriginX - 1,
-	NewPipe = pipe(originX(NewOriginX), originY(OriginY), width(Width), height(Height), direction(Direction)).
+	TickedPipe = pipe(originX(NewOriginX), originY(OriginY), width(Width), height(Height), direction(Direction)).
 
 getArea(Pipe, Area):-
 	toString(Pipe, String),

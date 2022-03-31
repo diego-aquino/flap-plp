@@ -5,12 +5,10 @@
 :- use_module(terminal).
 :- use_module(bird).
 :- use_module(pipeGroup).
-:- use_module(pipe).
 :- use_module('../utils/list').
 
 exitKeyNumber(113). % Char code for "Q"
 actionKeyNumber(13). % Char code for "Enter"
-
 
 gameFPS(20).
 delayBetweenGameFrames(DelayInSeconds):-
@@ -20,38 +18,25 @@ delayBetweenGameFrames(DelayInSeconds):-
 birdTickFPS(20).
 birdJumpVerticalSpeed(-1.4).
 
-pipeWidth(5).
-pipeGroupOriginY(0).
-pipeGroupHoleHeight(10).
-
 gravity(0.2).
-
-msInASecond(1000000).
 
 pipeTickFPS(20).
 pipeWidth(5).
 pipeGroupOriginY(0).
 pipeGroupHoleHeight(10).
-timeBetweenPipeCreations(2000000).
+timeBetweenPipeCreations(2).
 
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
 
   bird:create(4, 5, 0, Bird),
-
-  pipeWidth(PipeWidth),
-  pipeGroupOriginY(PipeGroupOriginY),
-  pipeGroupHoleHeight(PipeGroupHoleHeight),
-  pipeGroup:create(20, PipeGroupOriginY, PipeWidth, 21, 5, PipeGroupHoleHeight, PipeGroup1),
-  PipeGroups = [PipeGroup1 | []],
-
   InitialScore = 0,
   HighestScore = 0, % temporarily hardcoded 0
-
   gameState:playingScreenType(PlayingScreenType),
 
-  gameState:create(Bird, PipeGroups, InitialScore, HighestScore, PlayingScreenType, InitialGameState),
+  gameState:create(Bird, [], InitialScore, HighestScore, PlayingScreenType, InitialGameState),
+
   run(InitialGameState, 0).
 
 haltIfExitKeyWasTyped(CharCode):-
@@ -74,37 +59,40 @@ run(GameState, ElapsedTime):-
   terminal:fetchFromThread(CharCode),
   haltIfExitKeyWasTyped(CharCode),
 
-  terminal:getHeight(Height), 
+  terminal:getHeight(Height),
   terminal:getWidth(Width),
+
   pipeGroupHoleHeight(HoleHeight),
-  Base = 3,
-  Max is Height - HoleHeight - 5,
-  random(Base, Max, HoleOriginY),
+  MinHoleOriginY = 3,
+  MaxHoleOriginY is Height - HoleHeight - 5,
+  random(MinHoleOriginY, MaxHoleOriginY, HoleOriginY),
 
   pipeGroupOriginY(PipeGroupOriginY),
   PipeGroupHeight is Height - PipeGroupOriginY - 2,
-  PipeGroupOriginX is Width + 1, 
+  PipeGroupOriginX is Width + 1,
 
-  setPipeGroupToState(GameState, ElapsedTime, PipeGroupOriginX, HoleOriginY, PipeGroupHeight, NewGameState),
-
-  processInput(NewGameState, CharCode, GameStateWithInput),
-  tick(GameStateWithInput, ElapsedTime, TickedGameStateWithInput),
+  processInput(GameState, CharCode, GameStateWithInput),
+  createPipeGroupIfNecessary(GameStateWithInput, ElapsedTime, PipeGroupOriginX, HoleOriginY, PipeGroupHeight, GameStateWithNewPipeGroup),
+  tick(GameStateWithNewPipeGroup, ElapsedTime, TickedGame),
 
   % Tick
   % Check collisions
   % Save high score
 
   terminal:moveCursorToOrigin,
-  gameScreen:render(TickedGameStateWithInput),
+  gameScreen:render(TickedGame),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
   NextElapsedTime is ElapsedTime + DelayInSeconds,
-  run(TickedGameStateWithInput, NextElapsedTime).
+  run(TickedGame, NextElapsedTime).
 
-shouldCreatePipeGroup(ScreenType, ElapsedTime, Time):- 
-  ScreenType = 'playing-screen', 
-  ElapsedTime mod Time =:= 0.   
+shouldCreatePipeGroup(ScreenType, ElapsedTime):-
+  gameState:playingScreenType(ScreenType),
+  timeBetweenPipeCreations(TimeBetweenPipeCreations),
+  BaseElapsedTime is floor(ElapsedTime * 100),
+  BaseTimeBetweenPipeCreations is floor(TimeBetweenPipeCreations * 100),
+  0 is BaseElapsedTime mod BaseTimeBetweenPipeCreations.
 
 createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, PipeGroup):-
   pipeGroupHoleHeight(HoleHeight),
@@ -112,55 +100,63 @@ createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, PipeGroup):-
   pipeWidth(Width),
   pipeGroup:create(OriginX, OriginY, Width, PipeGroupHeight, HoleOriginY, HoleHeight, PipeGroup).
 
-
-setPipeGroupToState(GameState, ElapsedTime, OriginX, HoleOriginY, PipeGroupHeight, NewGameState):- 
+createPipeGroupIfNecessary(GameState, ElapsedTime, OriginX, HoleOriginY, PipeGroupHeight, NewGameState):-
   gameState:screenType(GameState, ScreenType),
-  timeBetweenPipeCreations(Time),
   gameState:pipeGroups(GameState, PipeGroups),
+
+  shouldCreatePipeGroup(ScreenType, ElapsedTime),
+
   createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, NewPipeGroup),
   append(PipeGroups, [NewPipeGroup], NewPipeGroupList),
-  (shouldCreatePipeGroup(ScreenType, ElapsedTime, Time) -> gameState:setPipeGroups(GameState, NewPipeGroupList, NewGameState);
-  NewGameState = GameState).
+  gameState:setPipeGroups(GameState, NewPipeGroupList, NewGameState),
+  !.
+createPipeGroupIfNecessary(GameState, _, _, _, _, GameState).
 
 tick(GameState, ElapsedTime, TickedGameState):-
-  gameState:bird(GameState, Bird),
-  tickBirdIfNecessary(Bird, ElapsedTime, TickedBird),
-  gameState:setBird(GameState, TickedBird, TickedGameState).
+  gameState:screenType(GameState, ScreenType),
 
-tickBirdIfNecessary(Bird, ElapsedTime, TickedBird):-
+  gameState:bird(GameState, Bird),
+  tickBirdIfNecessary(Bird, ScreenType, ElapsedTime, TickedBird),
+  gameState:setBird(GameState, TickedBird, GameStateWithTickedBird),
+
+  gameState:pipeGroups(GameState, PipeGroups),
+  tickPipeGroupsIfNecessary(PipeGroups, ScreenType, ElapsedTime, TickedPipeGroups),
+  gameState:setPipeGroups(GameStateWithTickedBird, TickedPipeGroups, TickedGameState).
+
+shouldTickBird(ScreenType, ElapsedTime):-
   birdTickFPS(BirdTickFPS),
+  gameState:playingScreenType(ScreenType),
   NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
-  0 is (NumberOfBirdFrames mod 1),
+  0 is NumberOfBirdFrames mod 1.
+
+tickBirdIfNecessary(Bird, ScreenType, ElapsedTime, TickedBird):-
+  shouldTickBird(ScreenType, ElapsedTime),
   gravity(Gravity),
   bird:tick(Bird, Gravity, TickedBird),
   !.
-tickBirdIfNecessary(Bird, _, Bird).
+tickBirdIfNecessary(Bird, _, _, Bird).
 
-shouldTickPipeGroups(ScreenType, ElapsedTime, PipeTickFPS, MsInASecond):- 
-  ScreenType = 'playing-screen', 
-  ElapsedTime mod PipeTickFPS // MsInASecond =:= 0.   
+shouldTickPipeGroups(ScreenType, ElapsedTime):-
+  pipeTickFPS(PipeTickFPS),
+  gameState:playingScreenType(ScreenType),
+  NumberOfPipeFrames is floor(ElapsedTime * PipeTickFPS),
+  0 is NumberOfPipeFrames mod 1.
 
-tickPipeGroupsIfNecessary(GameState, ElapsedTime, NewGameState):- 
-  gameState:pipeGroups(GameState, PipeGroups),
-  gameState:screenType(GameState, ScreenType),
-  pipeTickFPS(TickFPS),
-  msInASecond(MsInASecond),
+tickPipeGroupsIfNecessary(PipeGroups, ScreenType, ElapsedTime, NewPipeGroups):-
+  shouldTickPipeGroups(ScreenType, ElapsedTime),
   tickAllPipeGroups(PipeGroups, TickedPipeGroups),
-  removePipeGroupsIfNecessary(TickedPipeGroups, NewPipeGroupList),
-  (shouldTickPipeGroups(ScreenType, ElapsedTime, MsInASecond) -> gameState:setPipeGroups(GameState, NewPipeGroupList, NewGameState);
-  NewGameState = GameState). 
-tickPipeGroupsIfNecessary(GameState, _, NewGameState).
+  removePipeGroupsIfOutOfScreen(TickedPipeGroups, NewPipeGroups),
+  !.
+tickPipeGroupsIfNecessary(PipeGroups, _, _, PipeGroups).
 
-tickAllPipeGroups([],[]).
-tickAllPipeGroups([Head|Tail], [TickedHead|TickedTail]):-
-  pipeGroup:tick(Head,TickedHead),
-  tickAllPipeGroups(Tail, TickedTail).
+tickAllPipeGroups([], []).
+tickAllPipeGroups([PipeGroup | TailPipeGroups], [TickedPipeGroup | TickedTailPipeGroups]):-
+  pipeGroup:tick(PipeGroup, TickedPipeGroup),
+  tickAllPipeGroups(TailPipeGroups, TickedTailPipeGroups).
 
-removePipeGroupsIfNecessary([Head|Tail], NewPipeGroupList):-
-  length([Head|Tail], Length),
-  pipeGroup:originX(Head, OriginX),
+removePipeGroupsIfOutOfScreen([PipeGroup | TailPipeGroups], TailPipeGroups):-
+  pipeGroup:originX(PipeGroup, OriginX),
   pipeWidth(Width),
-  (Length > 0, OriginX + Widht =< 0 -> NewPipeGroupList = Tail;
-  NewPipeGroupList = [Head|Tail]).
-  
-      
+  OriginX + Width =< 0,
+  !.
+removePipeGroupsIfOutOfScreen(PipeGroups, PipeGroups).
