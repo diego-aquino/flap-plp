@@ -42,9 +42,7 @@ initGameLoop:-
 
   InitialScore = 0,
   HighestScore = 0, % temporarily hardcoded 0
-  InitialScreen = 'paused-screen'
-
-  gameState:playingScreenType(PlayingScreenType),
+  InitialScreen = 'paused-screen',
 
   gameState:create(Bird, PipeGroups, InitialScore, HighestScore, InitialScreen, InitialGameState),
   run(InitialGameState, 0).
@@ -110,7 +108,6 @@ tick(GameState, ElapsedTime, TickedGameState):-
 tick(GameState,_,GameState).
 
 tickScoreIfNecessary(GameState, ElapsedTime, TickedGameState):-
-  gameState:score(GameState,Score),
   scoreTickFPS(ScoreTickFPS),
   NumberOfScoreFrames is floor(ElapsedTime * ScoreTickFPS),
   0 is (NumberOfScoreFrames mod 1),

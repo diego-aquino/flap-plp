@@ -1,4 +1,4 @@
-:- module(gameState, [create/6, bird/2, setBird/3, pipeGroups/2, incrementScore/3, playingScreenType/1, pausedScreenType/1, gameOverScreenType/1]).
+:- module(gameState, [bird/2, setBird/3, pipeGroups/2, incrementScore/3, playingScreenType/1, pausedScreenType/1, gameOverScreenType/1]).
 
 playingScreenType('playing-screen').
 pausedScreenType('paused-screen').
@@ -52,10 +52,3 @@ incrementScore(GameState, Increment, NewGameState) :-
   screenType(GameState, ScreenType),
   NewScore is Score+Increment,
   NewGameState=gameState(bird(Bird), pipeGroups(PipeGroups), score(NewScore), highestScore(HighestScore), screenType(ScreenType)).
-
-setBird(GameState,NewBird,NewGameState):-
-  pipeGroups(GameState,PipeGroups),
-  score(GameState,Score),
-  highestScore(GameState,HighestScore),
-  screenType(GameState,ScreenType),
-  create(NewBird, PipeGroups, Score, HighestScore, ScreenType, NewGameState).
