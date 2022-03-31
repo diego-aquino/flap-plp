@@ -5,6 +5,8 @@
 :- use_module(terminal).
 :- use_module(localStorage).
 :- use_module(bird).
+:- use_module(pipeGroup).
+:- use_module(pipe).
 :- use_module('../utils/list').
 
 exitKeyNumber(113). % Char code for "Q"
@@ -21,16 +23,32 @@ birdJumpVerticalSpeed(-1.4).
 scoreTickFPS(20).
 scoreIncrement(1).
 
+pipeWidth(5).
+pipeGroupOriginY(0).
+pipeGroupHoleHeight(10).
+
 gravity(0.2).
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
-  bird:create(4, 5, 0, Bird),
-  readHighestScore(HighestScore),
-  gameState:create(Bird,PipeGroups,0,HighestScore,'paused-screen',GameState),
-  run(GameState, 0).
 
-% Stops program when the exit is typed. Stops the program correctly, but causes some problems afterwards.
+  bird:create(4, 5, 0, Bird),
+
+  pipeWidth(PipeWidth),
+  pipeGroupOriginY(PipeGroupOriginY),
+  pipeGroupHoleHeight(PipeGroupHoleHeight),
+  pipeGroup:create(20, PipeGroupOriginY, PipeWidth, 21, 5, PipeGroupHoleHeight, PipeGroup1),
+  PipeGroups = [PipeGroup1 | []],
+
+  InitialScore = 0,
+  HighestScore = 0, % temporarily hardcoded 0
+  InitialScreen = 'paused-screen'
+
+  gameState:playingScreenType(PlayingScreenType),
+
+  gameState:create(Bird, PipeGroups, InitialScore, HighestScore, InitialScreen, InitialGameState),
+  run(InitialGameState, 0).
+
 haltIfExitKeyWasTyped(CharCode):-
   exitKeyNumber(CharCode),
   terminal:showCursor,
@@ -67,20 +85,19 @@ run(GameState, ElapsedTime):-
   % Change pipes
 
   processInput(GameState, CharCode, GameStateWithInput),
-  
-  tick(GameStateWithInput, ElapsedTime, TickedGameState),
+  tick(GameStateWithInput, ElapsedTime, TickedGameStateWithInput),
 
   % Check collisions
 
   % Save high score
 
   terminal:moveCursorToOrigin,
-  gameScreen:render(TickedGameState),
+  gameScreen:render(TickedGameStateWithInput),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
   NextElapsedTime is ElapsedTime + DelayInSeconds,
-  run(TickedGameState, NextElapsedTime).
+  run(TickedGameStateWithInput, NextElapsedTime).
 
 tick(GameState, ElapsedTime, TickedGameState):-
   gameState:screenType(GameState,'playing-screen'),
