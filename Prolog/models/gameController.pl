@@ -54,8 +54,8 @@ run(Bird, ElapsedTime):-
   terminal:fetchFromThread(CharCode),
   haltIfExitKeyWasTyped(CharCode),
 
-  terminal:getTerminalHeight(Height), 
-  terminal:getTerminalWidth(Width),
+  terminal:getHeight(Height), 
+  terminal:getWidth(Width),
   pipeGroupHoleHeight(HoleHeight),
   Base = 3,
   Max is Height - HoleHeight - 5,
@@ -64,6 +64,8 @@ run(Bird, ElapsedTime):-
   pipeGroupOriginY(PipeGroupOriginY),
   PipeGroupHeight is Height - PipeGroupOriginY - 2,
   PipeGroupOriginX is Width + 1, 
+
+  setPipeGroupToState()
 
   processInput(Bird, CharCode, BirdWithInput),
   tick(BirdWithInput, ElapsedTime, TickedBird), % tick(State, ElapsedTime, TickedState)
@@ -88,7 +90,12 @@ createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, PipeGroup):-
   pipeGroupHoleHeight(HoleHeight),
   pipeGroupOriginY(OriginY),
   pipeWidth(Width),
-  pipeGroup:create(OriginX, OriginY, Width, PipeGroupHeight, HoleOriginY, HoleHeight, PipeGroup).
+  TopPipeHeight is HoleOriginY - OriginY,
+	BottomPipeHeight is Height - TopPipeHeight - HoleHeight,
+	BottomPipeOriginY is OriginY + TopPipeHeight + HoleHeight,
+	pipe:create(OriginX, OriginY, Width, TopPipeHeight, "DOWN", TopPipe),
+	pipe:create(OriginX, BottomPipeOriginY, Width, BottomPipeHeight, "UP", BottomPipe),
+  pipeGroup:create(OriginX, OriginY, TopPipe, BottomPipe, Width, PipeGroupHeight, HoleOriginY, HoleHeight, PipeGroup).
 
 
 setPipeGroupToState(GameState, ElapsedTime, OriginX, HoleOriginY, PipeGroupHeight, NewGameState):- 
@@ -126,6 +133,9 @@ tickPipeGroupsIfNecessary(GameState, ElapsedTime, NewGameState):-
   (shouldTickPipeGroups(ScreenType, ElapsedTime, MsInASecond) -> gameState:setPipeGroups(GameState, NewPipeGroupList, NewGameState);
   NewGameState = GameState). 
 tickPipeGroupsIfNecessary(GameState, _, NewGameState).
+
+tickAllPipeGroups(_,[],[]).
+tickAllPipeGroups([Head|Tail],)
 
 
 removePipeGroupsIfNecessary([Head|Tail], NewPipeGroupList):-
