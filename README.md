@@ -54,14 +54,14 @@ Para utilizar a versão funcional desse projeto, escrita em [Haskell](https://ww
 
 ### Requisitos
 
-Para utilizar a versão funcional desse projeto, escrita em [Prolog](https://www.swi-prolog.org/), é preciso ter as seguintes ferramentas instaladas:
+Para utilizar a versão lógica desse projeto, escrita em [Prolog](https://www.swi-prolog.org/), é preciso ter as seguintes ferramentas instaladas:
 
 - [Git](https://git-scm.com/)
 - [SWI Prolog](https://www.swi-prolog.org/download/stable)
 
 ## Executando localmente
 
-É necessário ter um ambiente **Unix** para executar o projeto funcional, pois algumas funcionalidades avançadas do terminal não estão disponíveis em Prolog para Windows.
+É necessário ter um ambiente **Unix** para executar o projeto lógico, pois algumas funcionalidades avançadas do terminal não estão disponíveis em Prolog para Windows.
 
 1. Clonar repositório
 
