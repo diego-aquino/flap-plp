@@ -28,6 +28,13 @@ isScreenType(ScreenType) :-
   pausedScreenType(ScreenType);
   gameOverScreenType(ScreenType).
 
+setPipeGroupToState(GameState, PipeGroupList, NewGameState):-
+  bird(GameState, Bird),
+  score(GameState, Score),
+  highestScore(GameState, HighestScore),
+  screenType(GameState, ScreenType),  
+  NewGameState = gameState(bird(Bird), pipeGroups(PipeGroupList), score(Score), highestScore(HighestScore), screenType(ScreenType)).
+
 incrementScore(GameState, Increment, NewGameState) :-
   bird(GameState, Bird),
   pipeGroups(GameState, PipeGroups),
