@@ -2,28 +2,62 @@
 
 :- use_module(terminal).
 :- use_module(bird).
+:- use_module(gameState).
 :- use_module('../utils/list').
 :- use_module('../utils/strings').
 
-% In the future:
-% render(GameState):-
-render(Bird):-
-  renderPlayingScreen(Bird).
+render(GameState):-
+  gameState:screenType(GameState,ScreenType),
+  renderScreen(ScreenType,GameState).
 
-renderPausedScreen().
-
-renderPlayingScreen(Bird):-
+renderScreen('paused-screen',GameState):-
   terminal:getSize(TerminalWidth, TerminalHeight),
 
   ScreenMatrixWidth is TerminalWidth,
   ScreenMatrixHeight is TerminalHeight - 1,
   createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
 
+  gameState:highestScore(GameState,HighestScore),
+  string_concat("High Score: ", HighestScore, LastTextLine),
+  
+  renderTextToScreenMatrix(["Welcome to Flap-PLP", "Press <Enter> to flap your wings", LastTextLine],EmptyScreenMatrix,ScreenMatrixWithText),
+  
+  printScreenMatrix(ScreenMatrixWithText).
+
+renderScreen('game-over-screen',GameState):-
+  terminal:getSize(TerminalWidth, TerminalHeight),
+
+  ScreenMatrixWidth is TerminalWidth,
+  ScreenMatrixHeight is TerminalHeight - 1,
+  createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
+
+  gameState:highestScore(GameState,HighestScore),
+  string_concat("High Score: ", HighestScore, LastTextLine),
+  
+  renderTextToScreenMatrix(["Game Over", "Press <Enter> to play again", LastTextLine],EmptyScreenMatrix,ScreenMatrixWithText),
+  
+  printScreenMatrix(ScreenMatrixWithText).
+
+renderScreen('playing-screen',GameState):-
+  terminal:getSize(TerminalWidth, TerminalHeight),
+
+  ScreenMatrixWidth is TerminalWidth,
+  ScreenMatrixHeight is TerminalHeight - 1,
+  createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
+
+  gameState:bird(GameState,Bird),
   renderBirdToScreenMatrix(Bird, EmptyScreenMatrix, ScreenMatrixWithBird),
+  
+  gameState:score(GameState,Score),
+  renderScoreToScreenMatrix(Score,ScreenMatrixWithBird,ScreenMatrixWithScore),
+  printScreenMatrix(ScreenMatrixWithScore).
 
-  printScreenMatrix(ScreenMatrixWithBird).
-
-renderGameOverScreen().
+renderScoreToScreenMatrix(Score,ScreenMatrix,ScreenMatrixWithScore):-
+  string_concat("Score: ",Score,ScoreText),
+  atom_length(ScoreText, TextLength),
+  widthScreenMatrix(ScreenMatrix,Width),
+  OriginX is (Width - TextLength) // 2,
+  renderObject(OriginX, 0, ScoreText, ScreenMatrix, ScreenMatrixWithScore).
 
 createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix):-
   list:createMatrix(ScreenMatrixWidth, ScreenMatrixHeight, " ", EmptyScreenMatrix).
@@ -33,6 +67,28 @@ renderBirdToScreenMatrix(Bird, ScreenMatrix, ScreenMatrixWithBird):-
   bird:originY(Bird, OriginY),
   bird:toString(Bird, BirdAsString),
   renderObject(OriginX, OriginY, BirdAsString, ScreenMatrix, ScreenMatrixWithBird).
+
+renderTextToScreenMatrix([Text|[]],EmptyScreenMatrix,ScreenMatrixWithText):-
+  atom_length(Text, TextLength),
+  widthScreenMatrix(EmptyScreenMatrix,Width),
+  heightScreenMatrix(EmptyScreenMatrix,Height),
+  OriginX is (Width - TextLength) // 2,
+  OriginY is Height // 2,
+  renderObject(OriginX, OriginY, Text,EmptyScreenMatrix,ScreenMatrixWithText).
+
+renderTextToScreenMatrix([TextLine|RemainingTextLines],EmptyScreenMatrix,ScreenMatrixWithText):-
+  length(RemainingTextLines,RemainingLinesLength),
+  Spacing is RemainingLinesLength * 2,
+  renderTextToScreenMatrixRecursive(TextLine,Spacing,EmptyScreenMatrix,ScreenMatrixWithRecursiveText),
+  renderTextToScreenMatrix(RemainingTextLines,ScreenMatrixWithRecursiveText,ScreenMatrixWithText).
+
+renderTextToScreenMatrixRecursive(TextLine,Spacing,EmptyScreenMatrix,ScreenMatrixWithText):-
+  atom_length(TextLine, TextLength),
+  widthScreenMatrix(EmptyScreenMatrix,Width),
+  heightScreenMatrix(EmptyScreenMatrix,Height),
+  OriginX is (Width - TextLength) // 2,
+  OriginY is (Height // 2) - Spacing,
+  renderObject(OriginX,OriginY,TextLine,EmptyScreenMatrix,ScreenMatrixWithText).
 
 renderObject(OriginX, OriginY, ObjectString, ScreenMatrix, RenderedScreenMatrix):-
   widthScreenMatrix(ScreenMatrix, WidthScreenMatrix),
