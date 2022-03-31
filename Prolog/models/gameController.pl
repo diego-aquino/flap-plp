@@ -1,7 +1,9 @@
 :- module(controller, [initGameLoop/0]).
 
 :- use_module(gameScreen).
+:- use_module(gameState).
 :- use_module(terminal).
+:- use_module(localStorage).
 :- use_module(bird).
 :- use_module(pipeGroup).
 :- use_module(pipe).
@@ -18,12 +20,14 @@ delayBetweenGameFrames(DelayInSeconds):-
 birdTickFPS(20).
 birdJumpVerticalSpeed(-1.4).
 
+scoreTickFPS(20).
+scoreIncrement(1).
+
 pipeWidth(5).
 pipeGroupOriginY(0).
 pipeGroupHoleHeight(10).
 
 gravity(0.2).
-
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
@@ -38,10 +42,9 @@ initGameLoop:-
 
   InitialScore = 0,
   HighestScore = 0, % temporarily hardcoded 0
+  InitialScreen = 'paused-screen',
 
-  gameState:playingScreenType(PlayingScreenType),
-
-  gameState:create(Bird, PipeGroups, InitialScore, HighestScore, PlayingScreenType, InitialGameState),
+  gameState:create(Bird, PipeGroups, InitialScore, HighestScore, InitialScreen, InitialGameState),
   run(InitialGameState, 0).
 
 haltIfExitKeyWasTyped(CharCode):-
@@ -51,20 +54,30 @@ haltIfExitKeyWasTyped(CharCode):-
   !.
 haltIfExitKeyWasTyped(_).
 
+processInputByScreen('playing-screen',GameState,GameStateWithInput):-
+  gameState:bird(GameState,Bird),
+  birdJumpVerticalSpeed(BirdJumpVerticalSpeed),
+  bird:jump(Bird, BirdJumpVerticalSpeed, BirdWithInput),
+  gameState:setBird(GameState,BirdWithInput,GameStateWithInput).
+
+processInputByScreen('paused-screen',GameState,GameStateWithInput):-
+  gameState:changeScreenType(GameState,'playing-screen',GameStateWithInput).
+
+processInputByScreen('game-over-screen',GameState,GameStateWithInput):-
+  gameState:changeScreenType(GameState,'playing-screen',GameStateWithInput).
+
 processInput(GameState, CharCode, GameStateWithInput):-
   actionKeyNumber(CharCode),
-  birdJumpVerticalSpeed(BirdJumpVerticalSpeed),
-  gameState:bird(GameState, Bird),
-  bird:jump(Bird, BirdJumpVerticalSpeed, JumpedBird),
-  gameState:setBird(GameState, JumpedBird, GameStateWithInput),
-  !.
+  gameState:screenType(GameState,ScreenType),
+  processInputByScreen(ScreenType,GameState,GameStateWithInput),!.
+
 processInput(GameState, _, GameState).
 
 run(GameState, ElapsedTime):-
   terminal:fetchFromThread(CharCode),
   haltIfExitKeyWasTyped(CharCode),
 
-  % terminal:getTerminalHeight(Height), This methods are commented
+  % terminal:getTerminalHeight(Height),
   % terminal:getTerminalWidth(Width),
 
   % Change pipes
@@ -72,8 +85,8 @@ run(GameState, ElapsedTime):-
   processInput(GameState, CharCode, GameStateWithInput),
   tick(GameStateWithInput, ElapsedTime, TickedGameStateWithInput),
 
-  % Tick
   % Check collisions
+
   % Save high score
 
   terminal:moveCursorToOrigin,
@@ -85,15 +98,32 @@ run(GameState, ElapsedTime):-
   run(TickedGameStateWithInput, NextElapsedTime).
 
 tick(GameState, ElapsedTime, TickedGameState):-
-  gameState:bird(GameState, Bird),
-  tickBirdIfNecessary(Bird, ElapsedTime, TickedBird),
-  gameState:setBird(GameState, TickedBird, TickedGameState).
+  gameState:screenType(GameState,'playing-screen'),
 
-tickBirdIfNecessary(Bird, ElapsedTime, TickedBird):-
+  tickScoreIfNecessary(GameState,ElapsedTime,TickedGameState1),
+
+  tickBirdIfNecessary(TickedGameState1, ElapsedTime, TickedGameState),
+  !.
+
+tick(GameState,_,GameState).
+
+tickScoreIfNecessary(GameState, ElapsedTime, TickedGameState):-
+  scoreTickFPS(ScoreTickFPS),
+  NumberOfScoreFrames is floor(ElapsedTime * ScoreTickFPS),
+  0 is (NumberOfScoreFrames mod 1),
+  scoreIncrement(ScoreIncrement),
+  gameState:incrementScore(GameState, ScoreIncrement, TickedGameState),
+  !.
+
+tickScoreIfNecessary(GameState,_,GameState).
+
+tickBirdIfNecessary(GameState, ElapsedTime, TickedGameState):-
+  gameState:bird(GameState,Bird),
   birdTickFPS(BirdTickFPS),
   NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
   0 is (NumberOfBirdFrames mod 1),
   gravity(Gravity),
   bird:tick(Bird, Gravity, TickedBird),
+  gameState:setBird(GameState,TickedBird,TickedGameState),
   !.
-tickBirdIfNecessary(Bird, _, Bird).
+tickBirdIfNecessary(GameState, _, GameState).
