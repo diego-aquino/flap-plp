@@ -38,8 +38,25 @@ score(GameState, Score) :-
 highestScore(GameState, HighestScore) :-
   GameState=gameState(bird(_), pipeGroups(_), score(_), highestScore(HighestScore), screenType(_)).
 
+incrementScore(GameState, Increment, NewGameState) :-
+  bird(GameState, Bird),
+  pipeGroups(GameState, PipeGroups),
+  score(GameState, Score),
+  highestScore(GameState, HighestScore),
+  screenType(GameState, ScreenType),
+  NewScore is Score+Increment,
+  NewGameState=gameState(bird(Bird), pipeGroups(PipeGroups), score(NewScore), highestScore(HighestScore), screenType(ScreenType)).
+
 screenType(GameState, ScreenType) :-
   GameState=gameState(bird(_), pipeGroups(_), score(_), highestScore(_), screenType(ScreenType)).
+
+setScreenType(GameState, NewScreenType, NewGameState):-
+  isScreenType(NewScreenType),
+  bird(GameState, Bird),
+  pipeGroups(GameState, PipeGroups),
+  score(GameState, Score),
+  highestScore(GameState, HighestScore),
+  create(Bird, PipeGroups, Score, HighestScore, NewScreenType, NewGameState).
 
 isScreenType(ScreenType) :-
   playingScreenType(ScreenType);
@@ -52,12 +69,3 @@ setPipeGroupToState(GameState, PipeGroupList, NewGameState):-
   highestScore(GameState, HighestScore),
   screenType(GameState, ScreenType),
   NewGameState = gameState(bird(Bird), pipeGroups(PipeGroupList), score(Score), highestScore(HighestScore), screenType(ScreenType)).
-
-incrementScore(GameState, Increment, NewGameState) :-
-  bird(GameState, Bird),
-  pipeGroups(GameState, PipeGroups),
-  score(GameState, Score),
-  highestScore(GameState, HighestScore),
-  screenType(GameState, ScreenType),
-  NewScore is Score+Increment,
-  NewGameState=gameState(bird(Bird), pipeGroups(PipeGroups), score(NewScore), highestScore(HighestScore), screenType(ScreenType)).

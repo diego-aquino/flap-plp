@@ -3,6 +3,7 @@
 :- use_module(gameScreen).
 :- use_module(gameState).
 :- use_module(terminal).
+:- use_module(localStorage).
 :- use_module(bird).
 :- use_module(pipeGroup).
 :- use_module('../utils/list').
@@ -26,6 +27,9 @@ pipeGroupOriginY(0).
 pipeGroupHoleHeight(10).
 timeBetweenPipeCreations(2).
 
+scoreTickFPS(20).
+scoreIncrement(1).
+
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
@@ -33,10 +37,8 @@ initGameLoop:-
   bird:create(4, 5, 0, Bird),
   InitialScore = 0,
   HighestScore = 0, % temporarily hardcoded 0
-  gameState:playingScreenType(PlayingScreenType),
-
-  gameState:create(Bird, [], InitialScore, HighestScore, PlayingScreenType, InitialGameState),
-
+  gameState:pausedScreenType(InitialScreenType),
+  gameState:create(Bird, [], InitialScore, HighestScore, InitialScreenType, InitialGameState),
   run(InitialGameState, 10).
 
 haltIfExitKeyWasTyped(CharCode):-
@@ -46,12 +48,27 @@ haltIfExitKeyWasTyped(CharCode):-
   !.
 haltIfExitKeyWasTyped(_).
 
+processInputByScreen(ScreenType, GameState, GameStateWithInput):-
+  gameState:playingScreenType(ScreenType),
+  gameState:bird(GameState,Bird),
+  birdJumpVerticalSpeed(BirdJumpVerticalSpeed),
+  bird:jump(Bird, BirdJumpVerticalSpeed, BirdWithInput),
+  gameState:setBird(GameState,BirdWithInput,GameStateWithInput).
+
+processInputByScreen(ScreenType, GameState, GameStateWithInput):-
+  gameState:pausedScreenType(ScreenType),
+  gameState:playingScreenType(PlayingScreenType),
+  gameState:setScreenType(GameState, PlayingScreenType, GameStateWithInput).
+
+processInputByScreen(ScreenType, GameState, GameStateWithInput):-
+  gameState:gameOverScreenType(ScreenType),
+  gameState:playingScreenType(PlayingScreenType),
+  gameState:setScreenType(GameState, PlayingScreenType, GameStateWithInput).
+
 processInput(GameState, CharCode, GameStateWithInput):-
   actionKeyNumber(CharCode),
-  birdJumpVerticalSpeed(BirdJumpVerticalSpeed),
-  gameState:bird(GameState, Bird),
-  bird:jump(Bird, BirdJumpVerticalSpeed, JumpedBird),
-  gameState:setBird(GameState, JumpedBird, GameStateWithInput),
+  gameState:screenType(GameState, ScreenType),
+  processInputByScreen(ScreenType,GameState, GameStateWithInput),
   !.
 processInput(GameState, _, GameState).
 
@@ -73,19 +90,18 @@ run(GameState, ElapsedTime):-
 
   processInput(GameState, CharCode, GameStateWithInput),
   createPipeGroupIfNecessary(GameStateWithInput, ElapsedTime, PipeGroupOriginX, HoleOriginY, PipeGroupHeight, GameStateWithNewPipeGroup),
-  tick(GameStateWithNewPipeGroup, ElapsedTime, TickedGame),
+  tick(GameStateWithNewPipeGroup, ElapsedTime, TickedGameState),
 
-  % Tick
   % Check collisions
   % Save high score
 
   terminal:moveCursorToOrigin,
-  gameScreen:render(TickedGame),
+  gameScreen:render(TickedGameState),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
   NextElapsedTime is ElapsedTime + DelayInSeconds,
-  run(TickedGame, NextElapsedTime).
+  run(TickedGameState, NextElapsedTime).
 
 shouldCreatePipeGroup(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
@@ -113,41 +129,43 @@ createPipeGroupIfNecessary(GameState, ElapsedTime, OriginX, HoleOriginY, PipeGro
 createPipeGroupIfNecessary(GameState, _, _, _, _, GameState).
 
 tick(GameState, ElapsedTime, TickedGameState):-
-  gameState:screenType(GameState, ScreenType),
-
-  gameState:bird(GameState, Bird),
-  tickBirdIfNecessary(Bird, ScreenType, ElapsedTime, TickedBird),
-  gameState:setBird(GameState, TickedBird, GameStateWithTickedBird),
-
-  gameState:pipeGroups(GameState, PipeGroups),
-  tickPipeGroupsIfNecessary(PipeGroups, ScreenType, ElapsedTime, TickedPipeGroups),
-  gameState:setPipeGroups(GameStateWithTickedBird, TickedPipeGroups, TickedGameState).
+  tickBirdIfNecessary(GameState, ElapsedTime, GameStateWithTickedBird),
+  tickPipeGroupsIfNecessary(GameStateWithTickedBird, ElapsedTime, GameStateWithTickedBirdAndPipeGroups),
+  tickScoreIfNecessary(GameStateWithTickedBirdAndPipeGroups, ElapsedTime, TickedGameState).
 
 shouldTickBird(ScreenType, ElapsedTime):-
-  birdTickFPS(BirdTickFPS),
   gameState:playingScreenType(ScreenType),
+  birdTickFPS(BirdTickFPS),
   NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
   0 is (NumberOfBirdFrames mod 1).
 
-tickBirdIfNecessary(Bird, ScreenType, ElapsedTime, TickedBird):-
+tickBirdIfNecessary(GameState, ElapsedTime, TickedGameState):-
+  gameState:screenType(GameState, ScreenType),
   shouldTickBird(ScreenType, ElapsedTime),
+
   gravity(Gravity),
+  gameState:bird(GameState, Bird),
   bird:tick(Bird, Gravity, TickedBird),
+  gameState:setBird(GameState, TickedBird, TickedGameState),
   !.
-tickBirdIfNecessary(Bird, _, _, Bird).
+tickBirdIfNecessary(GameState, _, GameState).
 
 shouldTickPipeGroups(ScreenType, ElapsedTime):-
-  pipeTickFPS(PipeTickFPS),
   gameState:playingScreenType(ScreenType),
+  pipeTickFPS(PipeTickFPS),
   NumberOfPipeFrames is floor(ElapsedTime * PipeTickFPS),
   0 is (NumberOfPipeFrames mod 1).
 
-tickPipeGroupsIfNecessary(PipeGroups, ScreenType, ElapsedTime, NewPipeGroups):-
+tickPipeGroupsIfNecessary(GameState, ElapsedTime, TickedGameState):-
+  gameState:screenType(GameState, ScreenType),
   shouldTickPipeGroups(ScreenType, ElapsedTime),
+
+  gameState:pipeGroups(GameState, PipeGroups),
   tickAllPipeGroups(PipeGroups, TickedPipeGroups),
   removePipeGroupsIfOutOfScreen(TickedPipeGroups, NewPipeGroups),
+  gameState:setPipeGroups(GameState, NewPipeGroups, TickedGameState),
   !.
-tickPipeGroupsIfNecessary(PipeGroups, _, _, PipeGroups).
+tickPipeGroupsIfNecessary(PipeGroups, _, PipeGroups).
 
 tickAllPipeGroups([], []).
 tickAllPipeGroups([PipeGroup | TailPipeGroups], [TickedPipeGroup | TickedTailPipeGroups]):-
@@ -160,3 +178,15 @@ removePipeGroupsIfOutOfScreen([PipeGroup | TailPipeGroups], TailPipeGroups):-
   OriginX + Width =< 0,
   !.
 removePipeGroupsIfOutOfScreen(PipeGroups, PipeGroups).
+
+tickScoreIfNecessary(GameState, ElapsedTime, TickedGameState):-
+  gameState:screenType(GameState, ScreenType),
+  gameState:playingScreenType(ScreenType),
+
+  scoreTickFPS(ScoreTickFPS),
+  NumberOfScoreFrames is floor(ElapsedTime * ScoreTickFPS),
+  0 is (NumberOfScoreFrames mod 1),
+  scoreIncrement(ScoreIncrement),
+  gameState:incrementScore(GameState, ScoreIncrement, TickedGameState),
+  !.
+tickScoreIfNecessary(GameState, _, GameState).
