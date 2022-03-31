@@ -3,7 +3,7 @@
 :- use_module(area).
 :- use_module('../utils/list').
 
-create(OriginX, OriginY, Width, Heigth, Direction, Pipe) :-
+create(OriginX, OriginY, Width, Height, Direction, Pipe) :-
 	Pipe = pipe(originX(OriginX), originY(OriginY), width(Width), height(Height), direction(Direction)).
 
 originX(Pipe, OriginX):-
@@ -47,7 +47,7 @@ toDownString(Pipe, ToDownString):-
 	reverse(List, ReversedList),
 	list:join(ReversedList, nl, ToDownString).
 
-toUpString(Pipe, toUpString):-
+toUpString(Pipe, ToUpString):-
 	toStringLines(Pipe,StringLines),
 	list:join(StringLines, nl, ToUpString).
 
