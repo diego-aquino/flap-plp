@@ -3,18 +3,29 @@
   FlapPLP
 </h1>
 
+- [Projeto funcional (Haskell)](#projeto-funcional-haskell)
+  - [Instalação](#instalação)
+    - [Requisitos](#requisitos)
+  - [Executando localmente](#executando-localmente)
+- [Projeto funcional (Prolog)](#projeto-funcional-prolog)
+  - [Instalação](#instalação-1)
+    - [Requisitos](#requisitos-1)
+  - [Executando localmente](#executando-localmente-1)
+- [Arquitetura](#arquitetura)
+- [Autores](#autores)
+
 # Projeto funcional (Haskell)
 
 ## Instalação
 
-### Pré-requisitos
+### Requisitos
 
 Para utilizar a versão funcional desse projeto, escrita em [Haskell](https://www.haskell.org/), é preciso ter as seguintes ferramentas instaladas:
 
 - [Git](https://git-scm.com/)
 - [Cabal](https://www.haskell.org/cabal/)
 
-### Executando localmente
+## Executando localmente
 
 1. Clonar repositório
 
@@ -37,11 +48,43 @@ Para utilizar a versão funcional desse projeto, escrita em [Haskell](https://ww
    cabal run
    ```
 
+# Projeto funcional (Prolog)
+
+## Instalação
+
+### Requisitos
+
+Para utilizar a versão funcional desse projeto, escrita em [Prolog](https://www.swi-prolog.org/), é preciso ter as seguintes ferramentas instaladas:
+
+- [Git](https://git-scm.com/)
+- [SWI Prolog](https://www.swi-prolog.org/download/stable)
+
+## Executando localmente
+
+1. Clonar repositório
+
+   ```bash
+   git clone https://github.com/diego-aquino/flap-plp.git
+   cd flap-plp/Prolog
+   ```
+
+2. Executar o projeto
+
+   - Unix: `swipl -q -f Main.pl`
+   - Windows: clique duas vezes para abrir o arquivo Main.pl.
+
+   Depois de entrar no prompt interativo, chame a regra `main`:
+
+   ```bash
+   ?- main.
+   ```
+
 Para uma melhor experiência, recomenda-se ajustar o tamanho do terminal para as seguintes dimensões>
+
 - Altura: ~30 caracteres
 - Largura: ~130 caracteres
 
-## Arquitetura
+# Arquitetura
 
 Na implementação, buscamos definir uma arquitetura de entidades e módulos, de modo a manter coesão e facilitar mudanças futuras. Abaixo, estão os principais módulos criados e os seus relacionamentos:
 
