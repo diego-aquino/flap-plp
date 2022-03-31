@@ -31,7 +31,7 @@ createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix
 renderBirdToScreenMatrix(Bird, ScreenMatrix, ScreenMatrixWithBird):-
   bird:originX(Bird, OriginX),
   bird:originY(Bird, OriginY),
-  bird:toString(BirdAsString),
+  bird:toString(Bird, BirdAsString),
   renderObject(OriginX, OriginY, BirdAsString, ScreenMatrix, ScreenMatrixWithBird).
 
 renderObject(OriginX, OriginY, ObjectString, ScreenMatrix, RenderedScreenMatrix):-
