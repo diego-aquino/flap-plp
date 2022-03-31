@@ -28,10 +28,25 @@ jump(Bird, NewVerticalSpeed, JumpedBird):-
   create(OriginX, OriginY, NewVerticalSpeed, JumpedBird).
 
 getArea(Bird, Area):-
-  toString(String),
+  toString(Bird, String),
   originX(Bird, OriginX),
   originY(Bird, OriginY),
   area:createFromString(OriginX, OriginY, String, Area).
 
-toString(String):-
+toString(Bird, StringRepresentation):-
+  verticalSpeed(Bird, VerticalSpeed),
+  (
+  VerticalSpeed < 0 -> jumpingString(String);
+  VerticalSpeed > 0 -> downString(String);
+  VerticalSpeed == 0 -> middleString(String)
+  ) -> StringRepresentation = String.
+
+
+jumpingString(String):-
+  String = "   . 7\n // _/".
+
+middleString(String):-
   String = "== (.\n \\\\___\\\\".
+
+downString(String):-
+  String = "\\\\ .\n \\\\__\\".
