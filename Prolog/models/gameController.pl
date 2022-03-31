@@ -65,7 +65,6 @@ run(Bird, ElapsedTime):-
   PipeGroupHeight is Height - PipeGroupOriginY - 2,
   PipeGroupOriginX is Width + 1, 
 
-  setPipeGroupToState()
 
   processInput(Bird, CharCode, BirdWithInput),
   tick(BirdWithInput, ElapsedTime, TickedBird), % tick(State, ElapsedTime, TickedState)
@@ -134,9 +133,10 @@ tickPipeGroupsIfNecessary(GameState, ElapsedTime, NewGameState):-
   NewGameState = GameState). 
 tickPipeGroupsIfNecessary(GameState, _, NewGameState).
 
-tickAllPipeGroups(_,[],[]).
-tickAllPipeGroups([Head|Tail],)
-
+tickAllPipeGroups([],[]).
+tickAllPipeGroups([Head|Tail], [TickedHead|TickedTail]):-
+  pipeGroup:tick(Head,TickedHead),
+  tickAllPipeGroups(Tail, TickedTail).
 
 removePipeGroupsIfNecessary([Head|Tail], NewPipeGroupList):-
   length([Head|Tail], Length),
