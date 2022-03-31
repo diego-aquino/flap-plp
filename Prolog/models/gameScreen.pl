@@ -38,11 +38,10 @@ renderScreen('game-over-screen',GameState):-
   renderTextToScreenMatrix(["Game Over", "Press <Enter> to play again", LastTextLine],EmptyScreenMatrix,ScreenMatrixWithText),
   
   printScreenMatrix(ScreenMatrixWithText).
-
+  
 renderScreen('playing-screen',GameState):-
 
   terminal:getSize(TerminalWidth, TerminalHeight),
-
   ScreenMatrixWidth is TerminalWidth,
   ScreenMatrixHeight is TerminalHeight - 1,
   createEmptyScreenMatrix(ScreenMatrixWidth, ScreenMatrixHeight, EmptyScreenMatrix),
@@ -52,7 +51,6 @@ renderScreen('playing-screen',GameState):-
   
   gameState:pipeGroups(GameState, PipeGroups),
   renderPipeGroupsToScreenMatrix(PipeGroups, ScreenMatrixWithBird, ScreenMatrixWithPipeGroups),
-
   gameState:score(GameState,Score),
   renderScoreToScreenMatrix(Score,ScreenMatrixWithPipeGroups,ScreenMatrixWithScore),
   
