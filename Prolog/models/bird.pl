@@ -3,16 +3,16 @@
 :- use_module(area).
 
 create(OriginX, OriginY, VerticalSpeed, Bird) :-
-    Bird=bird(originX(OriginX), originY(OriginY), verticalSpeed(VerticalSpeed)).
+  Bird=bird(originX(OriginX), originY(OriginY), verticalSpeed(VerticalSpeed)).
 
 originX(Bird, OriginX) :-
-    Bird=bird(originX(OriginX), originY(_), verticalSpeed(_)).
+  Bird=bird(originX(OriginX), originY(_), verticalSpeed(_)).
 
 originY(Bird, OriginY) :-
-    Bird=bird(originX(_), originY(OriginY), verticalSpeed(_)).
+  Bird=bird(originX(_), originY(OriginY), verticalSpeed(_)).
 
 verticalSpeed(Bird, VerticalSpeed) :-
-    Bird=bird(originX(_), originY(_), verticalSpeed(VerticalSpeed)).
+  Bird=bird(originX(_), originY(_), verticalSpeed(VerticalSpeed)).
 
 tick(Bird, Gravity, NewBird) :-
   originX(Bird, OriginX),
