@@ -109,12 +109,7 @@ createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, PipeGroup):-
   pipeGroupHoleHeight(HoleHeight),
   pipeGroupOriginY(OriginY),
   pipeWidth(Width),
-  TopPipeHeight is HoleOriginY - OriginY,
-	BottomPipeHeight is Height - TopPipeHeight - HoleHeight,
-	BottomPipeOriginY is OriginY + TopPipeHeight + HoleHeight,
-	pipe:create(OriginX, OriginY, Width, TopPipeHeight, "DOWN", TopPipe),
-	pipe:create(OriginX, BottomPipeOriginY, Width, BottomPipeHeight, "UP", BottomPipe),
-  pipeGroup:create(OriginX, OriginY, TopPipe, BottomPipe, Width, PipeGroupHeight, HoleOriginY, HoleHeight, PipeGroup).
+  pipeGroup:create(OriginX, OriginY, Width, PipeGroupHeight, HoleOriginY, HoleHeight, PipeGroup).
 
 
 setPipeGroupToState(GameState, ElapsedTime, OriginX, HoleOriginY, PipeGroupHeight, NewGameState):- 
