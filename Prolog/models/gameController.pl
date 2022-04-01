@@ -64,10 +64,11 @@ processInputByScreen(ScreenType, GameState, GameStateWithInput):-
   gameState:playingScreenType(PlayingScreenType),
   gameState:setScreenType(GameState, PlayingScreenType, GameStateWithInput).
 
-processInputByScreen(ScreenType, GameState, GameStateWithInput):-
+processInputByScreen(ScreenType, _GameState, GameStateWithInput):-
   gameState:gameOverScreenType(ScreenType),
   gameState:playingScreenType(PlayingScreenType),
-  gameState:setScreenType(GameState, PlayingScreenType, GameStateWithInput).
+  createInitialGameState(InitialGameState),
+  gameState:setScreenType(InitialGameState, PlayingScreenType, GameStateWithInput).
 
 processInput(GameState, CharCode, GameStateWithInput):-
   actionKeyNumber(CharCode),
