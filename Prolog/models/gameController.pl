@@ -36,7 +36,7 @@ initGameLoop:-
 
   bird:create(4, 5, 0, Bird),
   InitialScore = 0,
-  HighestScore = 0, % temporarily hardcoded 0
+  localStorage:readHighestScore(HighestScore),
   gameState:pausedScreenType(InitialScreenType),
   gameState:create(Bird, [], InitialScore, HighestScore, InitialScreenType, InitialGameState),
   run(InitialGameState, 10).
