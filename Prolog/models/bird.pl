@@ -14,6 +14,11 @@ originY(Bird, OriginY) :-
 verticalSpeed(Bird, VerticalSpeed) :-
   Bird=bird(originX(_), originY(_), verticalSpeed(VerticalSpeed)).
 
+getHeight(Bird, Height):-
+  toString(Bird, String),
+  strings:lines(String, NumberOfLines),
+  length(NumberOfLines, Height).
+
 tick(Bird, Gravity, NewBird) :-
   originX(Bird, OriginX),
   originY(Bird, OriginY),
