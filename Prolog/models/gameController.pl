@@ -1,5 +1,6 @@
 :- module(controller, [initGameLoop/0]).
 
+:- use_module(area).
 :- use_module(gameScreen).
 :- use_module(gameState).
 :- use_module(terminal).
@@ -12,9 +13,9 @@ exitKeyNumber(113). % Char code for "Q"
 actionKeyNumber(13). % Char code for "Enter"
 
 gameFPS(20).
-delayBetweenGameFrames(DelayInSeconds):-
+delayBetweenGameFrames(DelayInMilliseconds):-
   gameFPS(GameFPS),
-  DelayInSeconds is 1 / GameFPS.
+  DelayInMilliseconds is floor((1 / GameFPS) * 1000).
 
 birdTickFPS(20).
 birdJumpVerticalSpeed(-1.4).
@@ -25,21 +26,24 @@ pipeTickFPS(20).
 pipeWidth(5).
 pipeGroupOriginY(0).
 pipeGroupHoleHeight(10).
-timeBetweenPipeCreations(2).
+timeBetweenPipeCreations(2000).
 
 scoreTickFPS(20).
 scoreIncrement(1).
+
+createInitialGameState(InitialGameState):-
+  bird:create(4, 5, 0, Bird),
+  InitialScore = 0,
+  localStorage:readHighestScore(HighestScore),
+  gameState:pausedScreenType(InitialScreenType),
+  gameState:create(Bird, [], InitialScore, HighestScore, InitialScreenType, InitialGameState).
 
 initGameLoop:-
   terminal:hideCursor,
   terminal:startPlayerInputThread,
 
-  bird:create(4, 5, 0, Bird),
-  InitialScore = 0,
-  localStorage:readHighestScore(HighestScore),
-  gameState:pausedScreenType(InitialScreenType),
-  gameState:create(Bird, [], InitialScore, HighestScore, InitialScreenType, InitialGameState),
-  run(InitialGameState, 10).
+  createInitialGameState(InitialGameState),
+  run(InitialGameState, 0).
 
 haltIfExitKeyWasTyped(CharCode):-
   exitKeyNumber(CharCode),
@@ -60,10 +64,11 @@ processInputByScreen(ScreenType, GameState, GameStateWithInput):-
   gameState:playingScreenType(PlayingScreenType),
   gameState:setScreenType(GameState, PlayingScreenType, GameStateWithInput).
 
-processInputByScreen(ScreenType, GameState, GameStateWithInput):-
+processInputByScreen(ScreenType, _GameState, GameStateWithInput):-
   gameState:gameOverScreenType(ScreenType),
   gameState:playingScreenType(PlayingScreenType),
-  gameState:setScreenType(GameState, PlayingScreenType, GameStateWithInput).
+  createInitialGameState(InitialGameState),
+  gameState:setScreenType(InitialGameState, PlayingScreenType, GameStateWithInput).
 
 processInput(GameState, CharCode, GameStateWithInput):-
   actionKeyNumber(CharCode),
@@ -92,23 +97,23 @@ run(GameState, ElapsedTime):-
   createPipeGroupIfNecessary(GameStateWithInput, ElapsedTime, PipeGroupOriginX, HoleOriginY, PipeGroupHeight, GameStateWithNewPipeGroup),
   tick(GameStateWithNewPipeGroup, ElapsedTime, TickedGameState),
 
-  % Check collisions
-  % Save high score
+  checkCollision(TickedGameState, Height, GameStateAfterChecking),
+  saveHighestScoreIfNecessary(GameStateAfterChecking, NewHighestScore),
+  gameState:setHighestScore(GameStateAfterChecking, NewHighestScore, FinalGameState),
 
   terminal:moveCursorToOrigin,
-  gameScreen:render(TickedGameState),
+  gameScreen:render(FinalGameState),
 
-  delayBetweenGameFrames(DelayInSeconds),
+  delayBetweenGameFrames(DelayInMilliseconds),
+  DelayInSeconds is DelayInMilliseconds / 1000,
   sleep(DelayInSeconds),
-  NextElapsedTime is ElapsedTime + DelayInSeconds,
-  run(TickedGameState, NextElapsedTime).
+  NextElapsedTime is ElapsedTime + DelayInMilliseconds,
+  run(FinalGameState, NextElapsedTime).
 
 shouldCreatePipeGroup(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
   timeBetweenPipeCreations(TimeBetweenPipeCreations),
-  BaseElapsedTime is floor(ElapsedTime * 100),
-  BaseTimeBetweenPipeCreations is floor(TimeBetweenPipeCreations * 100),
-  0 is BaseElapsedTime mod BaseTimeBetweenPipeCreations.
+  0 is ElapsedTime mod TimeBetweenPipeCreations.
 
 createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, PipeGroup):-
   pipeGroupHoleHeight(HoleHeight),
@@ -136,7 +141,7 @@ tick(GameState, ElapsedTime, TickedGameState):-
 shouldTickBird(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
   birdTickFPS(BirdTickFPS),
-  NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
+  NumberOfBirdFrames is floor((ElapsedTime / 1000) * BirdTickFPS),
   0 is (NumberOfBirdFrames mod 1).
 
 tickBirdIfNecessary(GameState, ElapsedTime, TickedGameState):-
@@ -153,7 +158,7 @@ tickBirdIfNecessary(GameState, _, GameState).
 shouldTickPipeGroups(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
   pipeTickFPS(PipeTickFPS),
-  NumberOfPipeFrames is floor(ElapsedTime * PipeTickFPS),
+  NumberOfPipeFrames is floor((ElapsedTime / 1000) * PipeTickFPS),
   0 is (NumberOfPipeFrames mod 1).
 
 tickPipeGroupsIfNecessary(GameState, ElapsedTime, TickedGameState):-
@@ -184,9 +189,58 @@ tickScoreIfNecessary(GameState, ElapsedTime, TickedGameState):-
   gameState:playingScreenType(ScreenType),
 
   scoreTickFPS(ScoreTickFPS),
-  NumberOfScoreFrames is floor(ElapsedTime * ScoreTickFPS),
+  NumberOfScoreFrames is floor((ElapsedTime / 1000) * ScoreTickFPS),
   0 is (NumberOfScoreFrames mod 1),
   scoreIncrement(ScoreIncrement),
   gameState:incrementScore(GameState, ScoreIncrement, TickedGameState),
   !.
 tickScoreIfNecessary(GameState, _, GameState).
+
+checkCollision(GameState, TerminalHeight, NewGameState):-
+  gameState:screenType(GameState, ScreenType),
+  isColliding(GameState, TerminalHeight, IsCollidingWithAny),
+  (
+    ScreenType == 'playing-screen',
+    IsCollidingWithAny -> gameState:setScreenType(GameState, 'game-over-screen', GameStateAfterCollision)
+  ), NewGameState = GameStateAfterCollision; NewGameState = GameState.
+
+isColliding(GameState, TerminalHeight, IsCollidingWithAny):-
+  gameState:bird(GameState, Bird),
+  gameState:pipeGroups(GameState, PipeGroups),
+  bird:originY(Bird, OriginY),
+  bird:getHeight(Bird, BirdHeight),
+  (
+    isCollidingTop(OriginY, IsColliding);
+    isCollidingBottom(OriginY, BirdHeight, TerminalHeight, IsColliding);
+    isCollidingWithPipes(GameState, PipeGroups, IsColliding)
+  ) -> IsCollidingWithAny = IsColliding.
+
+isCollidingTop(OriginY, IsColliding):-
+  OriginY < 0,
+  IsColliding = true.
+
+isCollidingBottom(OriginY, BirdHeight, TerminalHeight, IsColliding):-
+  OriginY + BirdHeight > TerminalHeight,
+  IsColliding = true.
+
+isCollidingWithPipes(GameState, [PipeGroup | TailPipeGroups], IsCollidingWithPipes):-
+  nth0(0, TailPipeGroups, TailPipeGroup),
+  gameState:bird(GameState,Bird),
+  bird:getArea(Bird, BirdArea),
+  pipeGroup:getArea(PipeGroup, PipeGroupArea),
+  pipeGroup:getArea(TailPipeGroup, TailPipeGroupArea),
+  (
+    area:overlapsWith(BirdArea, PipeGroupArea, Overlaps);
+    area:overlapsWith(BirdArea, TailPipeGroupArea, Overlaps)
+  ) -> IsCollidingWithPipes = Overlaps.
+
+saveHighestScoreIfNecessary(GameState, NewHighestScore):-
+  gameState:score(GameState, Score),
+  gameState:highestScore(GameState, HighestScore),
+  (
+    (gameState:screenType(GameState, ScreenType), gameState:gameOverScreenType(ScreenType), Score > HighestScore) -> (
+      localStorage:saveHighestScore(Score),
+      NewHighestScore = Score
+    );
+      NewHighestScore = HighestScore
+  ).
