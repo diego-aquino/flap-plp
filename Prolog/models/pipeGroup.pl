@@ -1,4 +1,4 @@
-:- module(pipeGroup, [create/7, originX/2, originY/2, toString/2]).
+:- module(pipeGroup, [create/7, originX/2, originY/2, tick/2, toString/2]).
 
 :- use_module(area).
 :- use_module(pipe).
@@ -32,16 +32,20 @@ width(PipeGroup, Width):-
 holeHeight(PipeGroup, HoleHeight):-
 	PipeGroup = pipeGroup(originX(_) , originY(_), topPipe(_), bottomPipe(_), width(_), holeHeight(HoleHeight)).
 
-tick(PipeGroup, NewPipeGroup):-
+tick(PipeGroup, TickedPipeGroup):-
 	topPipe(PipeGroup, TopPipe),
 	bottomPipe(PipeGroup, BottomPipe),
 	width(PipeGroup, Width),
 	holeHeight(PipeGroup, HoleHeight),
-  pipe:tick(TopPipe,NewTopPipe),
-  pipe:tick(BottomPipe,NewBottomPipe),
-  pipe:originX(NewTopPipe,NewOriginX),
-  pipe:originY(NewTopPipe, NewOriginY),
-	NewPipeGroup = pipeGroup(originX(NewOriginX), originY(NewOriginY), topPipe(NewTopPipe), bottomPipe(NewBottomPipe), width(Width), holeHeight(HoleHeight)).
+
+  pipe:tick(TopPipe,TickedTopPipe),
+  pipe:tick(BottomPipe,TickedBottomPipe),
+  pipe:originX(TickedTopPipe, NewOriginX),
+  pipe:originY(TickedTopPipe, NewOriginY),
+
+	TickedPipeGroup = pipeGroup(
+    originX(NewOriginX), originY(NewOriginY), topPipe(TickedTopPipe), bottomPipe(TickedBottomPipe), width(Width), holeHeight(HoleHeight)
+  ).
 
 getArea(PipeGroup, Area):-
 	topPipe(PipeGroup, TopPipe),
