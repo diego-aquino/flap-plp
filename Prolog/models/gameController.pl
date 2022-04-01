@@ -13,9 +13,9 @@ exitKeyNumber(113). % Char code for "Q"
 actionKeyNumber(13). % Char code for "Enter"
 
 gameFPS(20).
-delayBetweenGameFrames(DelayInSeconds):-
+delayBetweenGameFrames(DelayInMilliseconds):-
   gameFPS(GameFPS),
-  DelayInSeconds is 1 / GameFPS.
+  DelayInMilliseconds is floor((1 / GameFPS) * 1000).
 
 birdTickFPS(20).
 birdJumpVerticalSpeed(-1.4).
@@ -26,7 +26,7 @@ pipeTickFPS(20).
 pipeWidth(5).
 pipeGroupOriginY(0).
 pipeGroupHoleHeight(10).
-timeBetweenPipeCreations(2).
+timeBetweenPipeCreations(2000).
 
 scoreTickFPS(20).
 scoreIncrement(1).
@@ -43,7 +43,7 @@ initGameLoop:-
   terminal:startPlayerInputThread,
 
   createInitialGameState(InitialGameState),
-  run(InitialGameState, 10).
+  run(InitialGameState, 0).
 
 haltIfExitKeyWasTyped(CharCode):-
   exitKeyNumber(CharCode),
@@ -104,17 +104,16 @@ run(GameState, ElapsedTime):-
   terminal:moveCursorToOrigin,
   gameScreen:render(FinalGameState),
 
-  delayBetweenGameFrames(DelayInSeconds),
+  delayBetweenGameFrames(DelayInMilliseconds),
+  DelayInSeconds is DelayInMilliseconds / 1000,
   sleep(DelayInSeconds),
-  NextElapsedTime is ElapsedTime + DelayInSeconds,
+  NextElapsedTime is ElapsedTime + DelayInMilliseconds,
   run(FinalGameState, NextElapsedTime).
 
 shouldCreatePipeGroup(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
   timeBetweenPipeCreations(TimeBetweenPipeCreations),
-  BaseElapsedTime is floor(ElapsedTime * 100),
-  BaseTimeBetweenPipeCreations is floor(TimeBetweenPipeCreations * 100),
-  0 is BaseElapsedTime mod BaseTimeBetweenPipeCreations.
+  0 is ElapsedTime mod TimeBetweenPipeCreations.
 
 createNewPipeGroup(OriginX, HoleOriginY, PipeGroupHeight, PipeGroup):-
   pipeGroupHoleHeight(HoleHeight),
@@ -142,7 +141,7 @@ tick(GameState, ElapsedTime, TickedGameState):-
 shouldTickBird(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
   birdTickFPS(BirdTickFPS),
-  NumberOfBirdFrames is floor(ElapsedTime * BirdTickFPS),
+  NumberOfBirdFrames is floor((ElapsedTime / 1000) * BirdTickFPS),
   0 is (NumberOfBirdFrames mod 1).
 
 tickBirdIfNecessary(GameState, ElapsedTime, TickedGameState):-
@@ -159,7 +158,7 @@ tickBirdIfNecessary(GameState, _, GameState).
 shouldTickPipeGroups(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
   pipeTickFPS(PipeTickFPS),
-  NumberOfPipeFrames is floor(ElapsedTime * PipeTickFPS),
+  NumberOfPipeFrames is floor((ElapsedTime / 1000) * PipeTickFPS),
   0 is (NumberOfPipeFrames mod 1).
 
 tickPipeGroupsIfNecessary(GameState, ElapsedTime, TickedGameState):-
@@ -190,7 +189,7 @@ tickScoreIfNecessary(GameState, ElapsedTime, TickedGameState):-
   gameState:playingScreenType(ScreenType),
 
   scoreTickFPS(ScoreTickFPS),
-  NumberOfScoreFrames is floor(ElapsedTime * ScoreTickFPS),
+  NumberOfScoreFrames is floor((ElapsedTime / 1000) * ScoreTickFPS),
   0 is (NumberOfScoreFrames mod 1),
   scoreIncrement(ScoreIncrement),
   gameState:incrementScore(GameState, ScoreIncrement, TickedGameState),
