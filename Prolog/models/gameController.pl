@@ -97,17 +97,17 @@ run(GameState, ElapsedTime):-
   createPipeGroupIfNecessary(GameStateWithInput, ElapsedTime, PipeGroupOriginX, HoleOriginY, PipeGroupHeight, GameStateWithNewPipeGroup),
   tick(GameStateWithNewPipeGroup, ElapsedTime, TickedGameState),
 
-  % Check collisions
-  checkCollision(TickedGameState, Height, StateAfterChecking),
-  % Save high score
+  checkCollision(TickedGameState, Height, GameStateAfterChecking),
+  saveHighestScoreIfNecessary(GameStateAfterChecking, NewHighestScore),
+  gameState:setHighestScore(GameStateAfterChecking, NewHighestScore, FinalGameState),
 
   terminal:moveCursorToOrigin,
-  gameScreen:render(StateAfterChecking),
+  gameScreen:render(FinalGameState),
 
   delayBetweenGameFrames(DelayInSeconds),
   sleep(DelayInSeconds),
   NextElapsedTime is ElapsedTime + DelayInSeconds,
-  run(StateAfterChecking, NextElapsedTime).
+  run(FinalGameState, NextElapsedTime).
 
 shouldCreatePipeGroup(ScreenType, ElapsedTime):-
   gameState:playingScreenType(ScreenType),
@@ -197,8 +197,6 @@ tickScoreIfNecessary(GameState, ElapsedTime, TickedGameState):-
   !.
 tickScoreIfNecessary(GameState, _, GameState).
 
-
-
 checkCollision(GameState, TerminalHeight, NewGameState):-
   gameState:screenType(GameState, ScreenType),
   isColliding(GameState, TerminalHeight, IsCollidingWithAny),
@@ -236,3 +234,14 @@ isCollidingWithPipes(GameState, [PipeGroup | TailPipeGroups], IsCollidingWithPip
     area:overlapsWith(BirdArea, PipeGroupArea, Overlaps);
     area:overlapsWith(BirdArea, TailPipeGroupArea, Overlaps)
   ) -> IsCollidingWithPipes = Overlaps.
+
+saveHighestScoreIfNecessary(GameState, NewHighestScore):-
+  gameState:score(GameState, Score),
+  gameState:highestScore(GameState, HighestScore),
+  (
+    (gameState:screenType(GameState, ScreenType), gameState:gameOverScreenType(ScreenType), Score > HighestScore) -> (
+      localStorage:saveHighestScore(Score),
+      NewHighestScore = Score
+    );
+      NewHighestScore = HighestScore
+  ).
